@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Picus.Api.Data.SeedData;
 using Picus.Api.Models;
 
 namespace Picus.Api.Data;
@@ -37,6 +38,12 @@ public class PicusDbContext : DbContext
             .HasForeignKey(g => g.AwayTeamId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Game>()
+            .HasOne(g => g.WinningTeam)
+            .WithMany()
+            .HasForeignKey(g => g.WinningTeamId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Pick configuration
         modelBuilder.Entity<Pick>()
             .HasOne(p => p.User)
@@ -62,6 +69,9 @@ public class PicusDbContext : DbContext
             .WithMany()
             .HasForeignKey(l => l.AdminUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Seed Data
+        modelBuilder.Entity<Team>().HasData(TeamSeedData.GetTeams());
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
