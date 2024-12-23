@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6320750E-B1B8-4533-B1AE-AC9E7A4C0FD0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Picus.Api", "src\Picus.Api\Picus.Api.csproj", "{D90330C7-BE4D-4AE7-B2ED-997D429560B1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D90330C7-BE4D-4AE7-B2ED-997D429560B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D90330C7-BE4D-4AE7-B2ED-997D429560B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D90330C7-BE4D-4AE7-B2ED-997D429560B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D90330C7-BE4D-4AE7-B2ED-997D429560B1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D90330C7-BE4D-4AE7-B2ED-997D429560B1} = {6320750E-B1B8-4533-B1AE-AC9E7A4C0FD0}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0DA3AD8A-13F5-49AA-93BE-FF2AC5E8780F}
+	EndGlobalSection
+EndGlobal
