@@ -1,0 +1,25 @@
+## .NET Core
+bin/
+obj/
+.vs/
+*.user
+*.userosscache
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+
+## Local development settings
+appsettings.Development.json
+appsettings.Local.json
+
+## Logs
+logs/
+*.log
+
+## Visual Studio Code
+.vscode/
+
+## Rider
+.idea/
+*.sln.iml
