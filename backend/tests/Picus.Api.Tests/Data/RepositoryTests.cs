@@ -19,7 +19,7 @@ public class RepositoryTests : TestBase
         // Arrange
         var team = new Team
         {
-            ESPNTeamId = "1",
+            ExternalTeamId = "1",
             Name = "Test Team",
             Abbreviation = "TST",
             IconUrl = "http://test.com/icon.png",
@@ -46,7 +46,7 @@ public class RepositoryTests : TestBase
         // Arrange
         var team = new Team
         {
-            ESPNTeamId = "1",
+            ExternalTeamId = "1",
             Name = "Test Team",
             Abbreviation = "TST"
         };
@@ -66,8 +66,8 @@ public class RepositoryTests : TestBase
         // Arrange
         var teams = new[]
         {
-            new Team { ESPNTeamId = "1", Name = "Team 1", Abbreviation = "T1" },
-            new Team { ESPNTeamId = "2", Name = "Team 2", Abbreviation = "T2" }
+            new Team { ExternalTeamId = "1", Name = "Team 1", Abbreviation = "T1" },
+            new Team { ExternalTeamId = "2", Name = "Team 2", Abbreviation = "T2" }
         };
         
         foreach (var team in teams)
@@ -88,7 +88,7 @@ public class RepositoryTests : TestBase
         // Arrange
         var team = new Team
         {
-            ESPNTeamId = "1",
+            ExternalTeamId = "1",
             Name = "Test Team",
             Abbreviation = "TST"
         };
@@ -110,7 +110,7 @@ public class RepositoryTests : TestBase
         // Arrange
         var team = new Team
         {
-            ESPNTeamId = "1",
+            ExternalTeamId = "1",
             Name = "Test Team",
             Abbreviation = "TST"
         };

@@ -4,7 +4,7 @@ namespace Picus.Api.Models;
 
 public class Team : BaseEntity
 {
-    public string ESPNTeamId { get; set; } = string.Empty;
+    public string ExternalTeamId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Abbreviation { get; set; } = string.Empty;
     public string City { get; set; } = string.Empty;

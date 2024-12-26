@@ -13,7 +13,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 1,
-                ESPNTeamId = "33",
+                ExternalTeamId = "33",
                 Name = "Ravens",
                 City = "Baltimore",
                 Abbreviation = "BAL",
@@ -28,7 +28,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 2,
-                ESPNTeamId = "4",
+                ExternalTeamId = "4",
                 Name = "Bengals",
                 City = "Cincinnati",
                 Abbreviation = "CIN",
@@ -43,7 +43,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 3,
-                ESPNTeamId = "5",
+                ExternalTeamId = "5",
                 Name = "Browns",
                 City = "Cleveland",
                 Abbreviation = "CLE",
@@ -58,7 +58,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 4,
-                ESPNTeamId = "23",
+                ExternalTeamId = "23",
                 Name = "Steelers",
                 City = "Pittsburgh",
                 Abbreviation = "PIT",
@@ -75,7 +75,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 5,
-                ESPNTeamId = "34",
+                ExternalTeamId = "34",
                 Name = "Texans",
                 City = "Houston",
                 Abbreviation = "HOU",
@@ -90,7 +90,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 6,
-                ESPNTeamId = "11",
+                ExternalTeamId = "11",
                 Name = "Colts",
                 City = "Indianapolis",
                 Abbreviation = "IND",
@@ -105,7 +105,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 7,
-                ESPNTeamId = "30",
+                ExternalTeamId = "30",
                 Name = "Jaguars",
                 City = "Jacksonville",
                 Abbreviation = "JAX",
@@ -120,7 +120,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 8,
-                ESPNTeamId = "10",
+                ExternalTeamId = "10",
                 Name = "Titans",
                 City = "Tennessee",
                 Abbreviation = "TEN",
@@ -137,7 +137,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 9,
-                ESPNTeamId = "2",
+                ExternalTeamId = "2",
                 Name = "Bills",
                 City = "Buffalo",
                 Abbreviation = "BUF",
@@ -152,7 +152,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 10,
-                ESPNTeamId = "15",
+                ExternalTeamId = "15",
                 Name = "Dolphins",
                 City = "Miami",
                 Abbreviation = "MIA",
@@ -167,7 +167,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 11,
-                ESPNTeamId = "17",
+                ExternalTeamId = "17",
                 Name = "Patriots",
                 City = "New England",
                 Abbreviation = "NE",
@@ -182,7 +182,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 12,
-                ESPNTeamId = "20",
+                ExternalTeamId = "20",
                 Name = "Jets",
                 City = "New York",
                 Abbreviation = "NYJ",
@@ -199,7 +199,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 13,
-                ESPNTeamId = "7",
+                ExternalTeamId = "7",
                 Name = "Broncos",
                 City = "Denver",
                 Abbreviation = "DEN",
@@ -214,7 +214,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 14,
-                ESPNTeamId = "12",
+                ExternalTeamId = "12",
                 Name = "Chiefs",
                 City = "Kansas City",
                 Abbreviation = "KC",
@@ -229,7 +229,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 15,
-                ESPNTeamId = "13",
+                ExternalTeamId = "13",
                 Name = "Raiders",
                 City = "Las Vegas",
                 Abbreviation = "LV",
@@ -244,7 +244,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 16,
-                ESPNTeamId = "24",
+                ExternalTeamId = "24",
                 Name = "Chargers",
                 City = "Los Angeles",
                 Abbreviation = "LAC",
@@ -261,7 +261,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 17,
-                ESPNTeamId = "3",
+                ExternalTeamId = "3",
                 Name = "Bears",
                 City = "Chicago",
                 Abbreviation = "CHI",
@@ -276,7 +276,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 18,
-                ESPNTeamId = "8",
+                ExternalTeamId = "8",
                 Name = "Lions",
                 City = "Detroit",
                 Abbreviation = "DET",
@@ -291,7 +291,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 19,
-                ESPNTeamId = "9",
+                ExternalTeamId = "9",
                 Name = "Packers",
                 City = "Green Bay",
                 Abbreviation = "GB",
@@ -306,7 +306,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 20,
-                ESPNTeamId = "16",
+                ExternalTeamId = "16",
                 Name = "Vikings",
                 City = "Minnesota",
                 Abbreviation = "MIN",
@@ -323,7 +323,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 21,
-                ESPNTeamId = "1",
+                ExternalTeamId = "1",
                 Name = "Falcons",
                 City = "Atlanta",
                 Abbreviation = "ATL",
@@ -338,7 +338,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 22,
-                ESPNTeamId = "29",
+                ExternalTeamId = "29",
                 Name = "Panthers",
                 City = "Carolina",
                 Abbreviation = "CAR",
@@ -353,7 +353,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 23,
-                ESPNTeamId = "18",
+                ExternalTeamId = "18",
                 Name = "Saints",
                 City = "New Orleans",
                 Abbreviation = "NO",
@@ -368,7 +368,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 24,
-                ESPNTeamId = "27",
+                ExternalTeamId = "27",
                 Name = "Buccaneers",
                 City = "Tampa Bay",
                 Abbreviation = "TB",
@@ -385,7 +385,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 25,
-                ESPNTeamId = "6",
+                ExternalTeamId = "6",
                 Name = "Cowboys",
                 City = "Dallas",
                 Abbreviation = "DAL",
@@ -400,7 +400,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 26,
-                ESPNTeamId = "19",
+                ExternalTeamId = "19",
                 Name = "Giants",
                 City = "New York",
                 Abbreviation = "NYG",
@@ -415,7 +415,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 27,
-                ESPNTeamId = "21",
+                ExternalTeamId = "21",
                 Name = "Eagles",
                 City = "Philadelphia",
                 Abbreviation = "PHI",
@@ -430,7 +430,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 28,
-                ESPNTeamId = "28",
+                ExternalTeamId = "28",
                 Name = "Commanders",
                 City = "Washington",
                 Abbreviation = "WSH",
@@ -447,7 +447,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 29,
-                ESPNTeamId = "22",
+                ExternalTeamId = "22",
                 Name = "Cardinals",
                 City = "Arizona",
                 Abbreviation = "ARI",
@@ -462,7 +462,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 30,
-                ESPNTeamId = "14",
+                ExternalTeamId = "14",
                 Name = "Rams",
                 City = "Los Angeles",
                 Abbreviation = "LAR",
@@ -477,7 +477,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 31,
-                ESPNTeamId = "25",
+                ExternalTeamId = "25",
                 Name = "49ers",
                 City = "San Francisco",
                 Abbreviation = "SF",
@@ -492,7 +492,7 @@ public static class TeamSeedData
             new Team
             {
                 Id = 32,
-                ESPNTeamId = "26",
+                ExternalTeamId = "26",
                 Name = "Seahawks",
                 City = "Seattle",
                 Abbreviation = "SEA",
