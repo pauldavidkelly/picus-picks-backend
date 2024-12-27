@@ -31,6 +31,9 @@ public class GameService : IGameService
         // Get games from SportsDb API
         var sportsDbGames = await _sportsDbService.GetLeagueScheduleAsync(leagueId, season);
         
+        // Filter out preseason games (week 500)
+        sportsDbGames = sportsDbGames.Where(g => GameMapper.ParseWeek(g.IntRound) != 500).ToList();
+        
         var upsertedGames = new List<Game>();
         
         foreach (var sportsDbGame in sportsDbGames)

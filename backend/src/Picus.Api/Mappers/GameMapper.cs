@@ -52,7 +52,7 @@ public static class GameMapper
         return int.TryParse(score, out int result) ? result : null;
     }
 
-    private static int ParseWeek(string round)
+    public static int ParseWeek(string round)
     {
         if (string.IsNullOrEmpty(round))
             return 0;
