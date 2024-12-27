@@ -25,7 +25,7 @@ public class GameMapperTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("12345", result.ESPNGameId);
+        Assert.Equal("12345", result.ExternalGameId);
         Assert.Equal("Test Stadium", result.Location);
         Assert.Equal(21, result.HomeTeamScore);
         Assert.Equal(14, result.AwayTeamScore);

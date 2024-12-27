@@ -14,7 +14,7 @@ public static class GameMapper
         
         return new Models.Game
         {
-            ESPNGameId = sportsDbGame.Id,
+            ExternalGameId = sportsDbGame.Id,
             GameTime = gameTime,
             PickDeadline = gameTime, // You might want to adjust this based on your requirements
             Location = sportsDbGame.StrVenue ?? string.Empty,
