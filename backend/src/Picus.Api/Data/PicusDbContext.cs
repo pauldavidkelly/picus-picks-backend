@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Picus.Api.Data.SeedData;
 using Picus.Api.Models;
 
 namespace Picus.Api.Data;
@@ -42,26 +41,32 @@ public class PicusDbContext : DbContext
             .HasOne(g => g.WinningTeam)
             .WithMany()
             .HasForeignKey(g => g.WinningTeamId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.NoAction);
 
         // Pick configuration
         modelBuilder.Entity<Pick>()
             .HasOne(p => p.User)
-            .WithMany(u => u.Picks)
+            .WithMany()
             .HasForeignKey(p => p.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<Pick>()
             .HasOne(p => p.Game)
-            .WithMany(g => g.Picks)
+            .WithMany()
             .HasForeignKey(p => p.GameId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<Pick>()
             .HasOne(p => p.SelectedTeam)
-            .WithMany(t => t.Picks)
+            .WithMany()
             .HasForeignKey(p => p.SelectedTeamId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Pick>()
+            .HasOne(p => p.PickedTeam)
+            .WithMany()
+            .HasForeignKey(p => p.PickedTeamId)
+            .OnDelete(DeleteBehavior.NoAction);
 
         // League configuration
         modelBuilder.Entity<League>()
@@ -69,9 +74,6 @@ public class PicusDbContext : DbContext
             .WithMany()
             .HasForeignKey(l => l.AdminUserId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        // Seed Data
-        modelBuilder.Entity<Team>().HasData(TeamSeedData.GetTeams());
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
