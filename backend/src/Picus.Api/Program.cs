@@ -4,11 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Picus.Api.Configuration;
 using Picus.Api.Data;
+using Picus.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddHttpClient<ISportsDbService, SportsDbService>();
 
 // Configure Auth0 Settings
 var auth0Settings = builder.Configuration.GetSection("Auth0").Get<Auth0Settings>();
