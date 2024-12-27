@@ -5,11 +5,17 @@ using Microsoft.OpenApi.Models;
 using Picus.Api.Configuration;
 using Picus.Api.Data;
 using Picus.Api.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
 builder.Services.AddHttpClient<ISportsDbService, SportsDbService>();
 
 // Configure Auth0 Settings
