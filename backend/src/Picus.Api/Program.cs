@@ -36,6 +36,9 @@ builder.Services.AddDbContext<PicusDbContext>(options =>
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
+// Register services
+builder.Services.AddScoped<IGameService, GameService>();
+
 // Add endpoints
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
