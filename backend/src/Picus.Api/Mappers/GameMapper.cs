@@ -11,6 +11,8 @@ public static class GameMapper
             throw new ArgumentNullException(nameof(sportsDbGame));
 
         var gameTime = ParseGameDateTime(sportsDbGame.Date, sportsDbGame.Time);
+        var week = ParseWeek(sportsDbGame.IntRound);
+        var isPlayoffs = DetermineIfPlayoffs(week);
         
         return new Models.Game
         {
@@ -20,7 +22,10 @@ public static class GameMapper
             Location = sportsDbGame.StrVenue ?? string.Empty,
             HomeTeamScore = ParseScore(sportsDbGame.HomeScore),
             AwayTeamScore = ParseScore(sportsDbGame.AwayScore),
-            IsCompleted = sportsDbGame.HomeScore != null && sportsDbGame.AwayScore != null
+            IsCompleted = sportsDbGame.HomeScore != null && sportsDbGame.AwayScore != null,
+            Week = week,
+            IsPlayoffs = isPlayoffs,
+            Season = DetermineSeason(gameTime) // We'll determine season from the game date
         };
     }
 
@@ -34,7 +39,7 @@ public static class GameMapper
         var timeStr = string.IsNullOrEmpty(time) ? "00:00:00" : time;
 
         if (DateTime.TryParse($"{dateStr} {timeStr}", out DateTime result))
-            return result;
+            return DateTime.SpecifyKind(result, DateTimeKind.Utc);
 
         throw new ArgumentException($"Invalid date/time format. Date: {date}, Time: {time}");
     }
@@ -45,5 +50,31 @@ public static class GameMapper
             return null;
 
         return int.TryParse(score, out int result) ? result : null;
+    }
+
+    private static int ParseWeek(string round)
+    {
+        if (string.IsNullOrEmpty(round))
+            return 0;
+
+        // Remove any non-digit characters and parse
+        var weekStr = new string(round.Where(char.IsDigit).ToArray());
+        if (int.TryParse(weekStr, out int week))
+            return week;
+
+        return 0;
+    }
+
+    private static bool DetermineIfPlayoffs(int week)
+    {
+        // In NFL, regular season is weeks 1-18
+        return week > 18;
+    }
+
+    private static int DetermineSeason(DateTime gameTime)
+    {
+        // NFL season spans two years, with most games in the first year
+        // If the game is in January/February, it's part of the previous year's season
+        return gameTime.Month <= 2 ? gameTime.Year - 1 : gameTime.Year;
     }
 }

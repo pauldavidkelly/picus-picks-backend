@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Picus.Api.Data;
@@ -11,9 +12,11 @@ using Picus.Api.Data;
 namespace Picus.Api.Migrations
 {
     [DbContext(typeof(PicusDbContext))]
-    partial class PicusDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241227151325_AddAllNFLTeams")]
+    partial class AddAllNFLTeams
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -130,6 +133,9 @@ namespace Picus.Api.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("GameId1")
+                        .HasColumnType("integer");
+
                     b.Property<bool?>("IsCorrect")
                         .HasColumnType("boolean");
 
@@ -139,19 +145,31 @@ namespace Picus.Api.Migrations
                     b.Property<int>("SelectedTeamId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GameId");
 
+                    b.HasIndex("GameId1");
+
                     b.HasIndex("SelectedTeamId");
 
+                    b.HasIndex("TeamId");
+
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Picks");
                 });
@@ -820,22 +838,34 @@ namespace Picus.Api.Migrations
             modelBuilder.Entity("Picus.Api.Models.Pick", b =>
                 {
                     b.HasOne("Picus.Api.Models.Game", "Game")
-                        .WithMany("Picks")
+                        .WithMany()
                         .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("Picus.Api.Models.Game", null)
+                        .WithMany("Picks")
+                        .HasForeignKey("GameId1");
 
                     b.HasOne("Picus.Api.Models.Team", "SelectedTeam")
-                        .WithMany("Picks")
+                        .WithMany()
                         .HasForeignKey("SelectedTeamId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Picus.Api.Models.User", "User")
+                    b.HasOne("Picus.Api.Models.Team", null)
                         .WithMany("Picks")
+                        .HasForeignKey("TeamId");
+
+                    b.HasOne("Picus.Api.Models.User", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("Picus.Api.Models.User", null)
+                        .WithMany("Picks")
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("Game");
 

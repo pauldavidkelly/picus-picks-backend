@@ -17,7 +17,8 @@ public class GameMapperTests
             Time = "15:30:00",
             StrVenue = "Test Stadium",
             HomeScore = "21",
-            AwayScore = "14"
+            AwayScore = "14",
+            IntRound = "Week 17"
         };
 
         // Act
@@ -30,7 +31,34 @@ public class GameMapperTests
         Assert.Equal(21, result.HomeTeamScore);
         Assert.Equal(14, result.AwayTeamScore);
         Assert.True(result.IsCompleted);
-        Assert.Equal(new DateTime(2024, 12, 27, 15, 30, 0), result.GameTime);
+        Assert.Equal(DateTime.SpecifyKind(new DateTime(2024, 12, 27, 15, 30, 0), DateTimeKind.Utc), result.GameTime);
+        Assert.Equal(17, result.Week);
+        Assert.Equal(2024, result.Season);
+        Assert.False(result.IsPlayoffs);
+    }
+
+    [Fact]
+    public void ToGameEntity_WithPlayoffGame_MapsCorrectly()
+    {
+        // Arrange
+        var sportsDbGame = new Game
+        {
+            Id = "12345",
+            Date = "2024-01-20",  // January game in playoffs
+            Time = "15:30:00",
+            StrVenue = "Test Stadium",
+            HomeScore = "21",
+            AwayScore = "14",
+            IntRound = "Week 19"  // Playoff week
+        };
+
+        // Act
+        var result = sportsDbGame.ToGameEntity();
+
+        // Assert
+        Assert.True(result.IsPlayoffs);
+        Assert.Equal(19, result.Week);
+        Assert.Equal(2023, result.Season);  // January 2024 game belongs to 2023 season
     }
 
     [Fact]
