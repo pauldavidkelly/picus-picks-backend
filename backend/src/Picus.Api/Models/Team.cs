@@ -1,4 +1,5 @@
 using Picus.Api.Models.Enums;
+using System.Text.Json.Serialization;
 
 namespace Picus.Api.Models;
 
@@ -17,7 +18,10 @@ public class Team : BaseEntity
     public DivisionType Division { get; set; }
     
     // Navigation properties
+    [JsonIgnore]
     public ICollection<Game> HomeGames { get; set; } = new List<Game>();
+    [JsonIgnore]
     public ICollection<Game> AwayGames { get; set; } = new List<Game>();
+    [JsonIgnore]
     public ICollection<Pick> Picks { get; set; } = new List<Pick>();
 }

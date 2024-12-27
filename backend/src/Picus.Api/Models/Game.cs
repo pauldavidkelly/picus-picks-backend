@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Picus.Api.Models;
 
 public class Game : BaseEntity
@@ -17,8 +19,12 @@ public class Game : BaseEntity
     public int? WinningTeamId { get; set; }
     
     // Navigation properties
+    [JsonIgnore]
     public Team HomeTeam { get; set; } = null!;
+    [JsonIgnore]
     public Team AwayTeam { get; set; } = null!;
+    [JsonIgnore]
     public Team? WinningTeam { get; set; }
+    [JsonIgnore]
     public ICollection<Pick> Picks { get; set; } = new List<Pick>();
 }
