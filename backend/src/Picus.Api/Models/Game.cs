@@ -2,7 +2,7 @@ namespace Picus.Api.Models;
 
 public class Game : BaseEntity
 {
-    public string ESPNGameId { get; set; } = string.Empty;
+    public string ExternalGameId { get; set; } = string.Empty;
     public int HomeTeamId { get; set; }
     public int AwayTeamId { get; set; }
     public DateTime GameTime { get; set; }
