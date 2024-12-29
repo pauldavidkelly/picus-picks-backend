@@ -60,4 +60,19 @@ public class GamesController : ControllerBase
 
         return Ok(game);
     }
+
+    /// <summary>
+    /// Gets all games for a specific week and season
+    /// </summary>
+    /// <param name="week">The week number</param>
+    /// <param name="season">The season year</param>
+    /// <returns>List of games for the specified week and season</returns>
+    [HttpGet("week/{week}/season/{season}")]
+    [ProducesResponseType(typeof(IEnumerable<GameDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetGamesByWeekAndSeason(int week, int season)
+    {
+        var games = await _gameService.GetGamesByWeekAndSeasonAsync(week, season);
+        return Ok(games);
+    }
 }

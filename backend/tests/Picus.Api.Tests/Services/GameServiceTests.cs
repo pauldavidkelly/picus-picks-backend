@@ -324,4 +324,93 @@ public class GameServiceTests : TestBase
         // Assert
         Assert.Null(result);
     }
+
+    [Fact]
+    public async Task GetGamesByWeekAndSeasonAsync_WithExistingGames_ShouldReturnGames()
+    {
+        // Arrange
+        var games = new List<Models.Game>
+        {
+            new()
+            {
+                ExternalGameId = "game1",
+                Location = "Stadium 1",
+                GameTime = DateTime.SpecifyKind(DateTime.Parse("2024-01-01 20:00:00"), DateTimeKind.Utc),
+                PickDeadline = DateTime.SpecifyKind(DateTime.Parse("2024-01-01 20:00:00"), DateTimeKind.Utc),
+                HomeTeamId = 1,
+                AwayTeamId = 2,
+                HomeTeamScore = 21,
+                AwayTeamScore = 14,
+                IsCompleted = true,
+                Week = 17,
+                Season = 2023,
+                IsPlayoffs = false
+            },
+            new()
+            {
+                ExternalGameId = "game2",
+                Location = "Stadium 2",
+                GameTime = DateTime.SpecifyKind(DateTime.Parse("2024-01-01 16:00:00"), DateTimeKind.Utc),
+                PickDeadline = DateTime.SpecifyKind(DateTime.Parse("2024-01-01 16:00:00"), DateTimeKind.Utc),
+                HomeTeamId = 2,
+                AwayTeamId = 1,
+                HomeTeamScore = 28,
+                AwayTeamScore = 35,
+                IsCompleted = true,
+                Week = 17,
+                Season = 2023,
+                IsPlayoffs = false
+            },
+            new() // Different week
+            {
+                ExternalGameId = "game3",
+                Location = "Stadium 3",
+                GameTime = DateTime.SpecifyKind(DateTime.Parse("2024-01-08 20:00:00"), DateTimeKind.Utc),
+                PickDeadline = DateTime.SpecifyKind(DateTime.Parse("2024-01-08 20:00:00"), DateTimeKind.Utc),
+                HomeTeamId = 1,
+                AwayTeamId = 2,
+                HomeTeamScore = null,
+                AwayTeamScore = null,
+                IsCompleted = false,
+                Week = 18,
+                Season = 2023,
+                IsPlayoffs = false
+            }
+        };
+
+        await _context.Games.AddRangeAsync(games);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _gameService.GetGamesByWeekAndSeasonAsync(17, 2023);
+
+        // Assert
+        var gamesList = result.ToList();
+        Assert.Equal(2, gamesList.Count);
+        Assert.All(gamesList, g => Assert.Equal(17, g.Week));
+        Assert.All(gamesList, g => Assert.Equal(2023, g.Season));
+        
+        // Verify games are ordered by game time
+        Assert.Equal("Stadium 2", gamesList[0].Location); // 16:00 game
+        Assert.Equal("Stadium 1", gamesList[1].Location); // 20:00 game
+        
+        // Verify team details are included
+        Assert.All(gamesList, g =>
+        {
+            Assert.NotNull(g.HomeTeam);
+            Assert.NotNull(g.AwayTeam);
+            Assert.NotNull(g.HomeTeam.Name);
+            Assert.NotNull(g.AwayTeam.Name);
+        });
+    }
+
+    [Fact]
+    public async Task GetGamesByWeekAndSeasonAsync_WithNoGames_ShouldReturnEmptyList()
+    {
+        // Act
+        var result = await _gameService.GetGamesByWeekAndSeasonAsync(1, 2023);
+
+        // Assert
+        Assert.Empty(result);
+    }
 }
