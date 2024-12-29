@@ -115,14 +115,14 @@ public class GameMapperTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
-    public void ToGameEntity_WithInvalidDate_ThrowsArgumentException(string date)
+    [InlineData((string?)null)]
+    public void ToGameEntity_WithInvalidDate_ThrowsArgumentException(string? date)
     {
         // Arrange
         var sportsDbGame = new Game
         {
             Id = "12345",
-            Date = date,
+            Date = date ?? string.Empty,
             Time = "15:30:00"
         };
 

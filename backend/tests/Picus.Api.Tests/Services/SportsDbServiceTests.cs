@@ -22,7 +22,7 @@ public class SportsDbServiceTests
         _httpClient = new HttpClient(_mockHttpMessageHandler.Object);
         
         // Setup mock configuration using dictionary
-        var configValues = new Dictionary<string, string>
+        var configValues = new Dictionary<string, string?>
         {
             {"SportsDbApi:Url", "http://test-api-url"},
             {"SportsDbApi:ApiKey", "test-api-key"}
@@ -70,7 +70,7 @@ public class SportsDbServiceTests
         // Arrange
         var leagueId = 4328;
         var season = 2023;
-        var response = new GameSchedule { Schedule = null };
+        var response = new GameSchedule { Schedule = new List<Game> { } };
         var jsonResponse = JsonSerializer.Serialize(response);
 
         SetupMockHttpMessageHandler(HttpStatusCode.OK, jsonResponse);
@@ -122,7 +122,7 @@ public class SportsDbServiceTests
 
     private void SetupMockHttpMessageHandler(HttpStatusCode statusCode, string content)
     {
-        var baseUrl = _configuration["SportsDbApi:Url"];
+        var baseUrl = _configuration["SportsDbApi:Url"] ?? string.Empty;
         
         _mockHttpMessageHandler
             .Protected()
@@ -130,7 +130,7 @@ public class SportsDbServiceTests
                 "SendAsync",
                 ItExpr.Is<HttpRequestMessage>(req => 
                     req.Method == HttpMethod.Get && 
-                    req.RequestUri.ToString().StartsWith(baseUrl)),
+                    req.RequestUri!.ToString().StartsWith(baseUrl)),
                 ItExpr.IsAny<CancellationToken>()
             )
             .ReturnsAsync(new HttpResponseMessage
@@ -142,7 +142,7 @@ public class SportsDbServiceTests
 
     private void VerifyHttpCall(int leagueId, int season)
     {
-        var baseUrl = _configuration["SportsDbApi:Url"];
+        var baseUrl = _configuration["SportsDbApi:Url"] ?? string.Empty;
         var expectedUrl = $"{baseUrl}/schedule/league/{leagueId}/{season}";
 
         _mockHttpMessageHandler
@@ -152,7 +152,7 @@ public class SportsDbServiceTests
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
                     req.Method == HttpMethod.Get && 
-                    req.RequestUri.ToString() == expectedUrl),
+                    req.RequestUri != null && req.RequestUri.ToString() == expectedUrl),
                 ItExpr.IsAny<CancellationToken>()
             );
     }
