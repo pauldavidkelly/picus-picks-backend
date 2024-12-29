@@ -34,15 +34,15 @@ namespace Picus.Api.Models.SportsDb
         [JsonPropertyName("intAwayScore")]
         public string? AwayScore { get; set; }
 
-        public string StrSport { get; set; }
-        public string IntRound { get; set; }
+        public string? StrSport { get; set; }
+        public string? IntRound { get; set; }
         public DateTime StrTimestamp { get; set; }
-        public string DateEventLocal { get; set; }
-        public string StrTimeLocal { get; set; }
-        public string StrHomeTeamBadge { get; set; }
-        public string StrAwayTeamBadge { get; set; }
-        public string StrVenue { get; set; }
-        public string StrCountry { get; set; }
-        public string StrThumb { get; set; }
+        public string? DateEventLocal { get; set; }
+        public string? StrTimeLocal { get; set; }
+        public string? StrHomeTeamBadge { get; set; }
+        public string? StrAwayTeamBadge { get; set; }
+        public string? StrVenue { get; set; }
+        public string? StrCountry { get; set; }
+        public string? StrThumb { get; set; }
     }
 }
