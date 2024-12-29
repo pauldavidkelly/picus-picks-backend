@@ -277,7 +277,7 @@ public class GameServiceTests : TestBase
     }
 
     [Fact]
-    public async Task GetGameByIdAsync_WithExistingGame_ShouldReturnGame()
+    public async Task GetGameByIdAsync_WithExistingGame_ShouldReturnGameDTO()
     {
         // Arrange
         var game = new Models.Game
@@ -311,6 +311,8 @@ public class GameServiceTests : TestBase
         Assert.NotNull(result.AwayTeam);
         Assert.Equal("Home Team", result.HomeTeam.Name);
         Assert.Equal("Away Team", result.AwayTeam.Name);
+        Assert.Equal(1, result.HomeTeam.Id);
+        Assert.Equal(2, result.AwayTeam.Id);
     }
 
     [Fact]

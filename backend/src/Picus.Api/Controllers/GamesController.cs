@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Picus.Api.Services;
+using Picus.Api.Models.DTOs;
 
 namespace Picus.Api.Controllers;
 
@@ -23,7 +24,7 @@ public class GamesController : ControllerBase
     /// <param name="season">The season year to fetch games for</param>
     /// <returns>A list of games that were updated or inserted</returns>
     [HttpPost("upsert/{leagueId}/{season}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<GameDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpsertGames(int leagueId, int season)
@@ -45,7 +46,7 @@ public class GamesController : ControllerBase
     /// <param name="id">The ID of the game to retrieve</param>
     /// <returns>The game if found, or NotFound if not found</returns>
     [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GameDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetGameById(int id)
