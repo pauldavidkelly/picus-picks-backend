@@ -13,7 +13,7 @@ public abstract class TestBase : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new PicusDbContext(options);
+        _context = new PicusDbContext(options, seedData: false);
         _context.Database.EnsureCreated();
     }
 

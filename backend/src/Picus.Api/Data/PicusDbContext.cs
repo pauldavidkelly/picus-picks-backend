@@ -7,8 +7,11 @@ namespace Picus.Api.Data;
 
 public class PicusDbContext : DbContext
 {
-    public PicusDbContext(DbContextOptions<PicusDbContext> options) : base(options)
+    private readonly bool _seedData;
+
+    public PicusDbContext(DbContextOptions<PicusDbContext> options, bool seedData = true) : base(options)
     {
+        _seedData = seedData;
     }
 
     public DbSet<User> Users => Set<User>();
@@ -69,8 +72,11 @@ public class PicusDbContext : DbContext
             .HasForeignKey(l => l.AdminUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Seed Teams
-        SeedTeams(modelBuilder);
+        if (_seedData)
+        {
+            // Seed Teams
+            SeedTeams(modelBuilder);
+        }
     }
 
     private void SeedTeams(ModelBuilder modelBuilder)

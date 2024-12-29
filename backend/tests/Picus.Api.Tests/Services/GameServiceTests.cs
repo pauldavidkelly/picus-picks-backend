@@ -35,7 +35,7 @@ public class GameServiceTests : TestBase
     {
         // Arrange
         var leagueId = 1;
-        var season = 2024;
+        var season = 2023;
         var sportsDbGames = new List<Models.SportsDb.Game>
         {
             new()
@@ -84,7 +84,7 @@ public class GameServiceTests : TestBase
         Assert.Equal(1, game1.HomeTeamId);  // team1
         Assert.Equal(2, game1.AwayTeamId);  // team2
         Assert.Equal(17, game1.Week);
-        Assert.Equal(2024, game1.Season);
+        Assert.Equal(2023, game1.Season);
         Assert.False(game1.IsPlayoffs);
         Assert.Equal(1, game1.WinningTeamId);  // Home team won
 
@@ -96,7 +96,7 @@ public class GameServiceTests : TestBase
         Assert.Equal(2, game2.HomeTeamId);  // team2
         Assert.Equal(1, game2.AwayTeamId);  // team1
         Assert.Equal(17, game2.Week);
-        Assert.Equal(2024, game2.Season);
+        Assert.Equal(2023, game2.Season);
         Assert.False(game2.IsPlayoffs);
         Assert.Null(game2.WinningTeamId);  // No winner yet
     }
@@ -106,7 +106,7 @@ public class GameServiceTests : TestBase
     {
         // Arrange
         var leagueId = 1;
-        var season = 2024;
+        var season = 2023;
         var existingGame = new Models.Game
         {
             ExternalGameId = "game1",
@@ -119,7 +119,7 @@ public class GameServiceTests : TestBase
             AwayTeamScore = null,
             IsCompleted = false,
             Week = 17,
-            Season = 2024,
+            Season = 2023,
             IsPlayoffs = false
         };
         await _context.Games.AddAsync(existingGame);
@@ -161,7 +161,7 @@ public class GameServiceTests : TestBase
         Assert.Equal(1, updatedGame.HomeTeamId);
         Assert.Equal(2, updatedGame.AwayTeamId);
         Assert.Equal(17, updatedGame.Week);
-        Assert.Equal(2024, updatedGame.Season);
+        Assert.Equal(2023, updatedGame.Season);
         Assert.False(updatedGame.IsPlayoffs);
         Assert.Equal(1, updatedGame.WinningTeamId);  // Home team won
     }
@@ -171,7 +171,7 @@ public class GameServiceTests : TestBase
     {
         // Arrange
         var leagueId = 1;
-        var season = 2024;
+        var season = 2023;
         var existingGame = new Models.Game
         {
             ExternalGameId = "game1",
@@ -184,7 +184,7 @@ public class GameServiceTests : TestBase
             AwayTeamScore = null,
             IsCompleted = false,
             Week = 17,
-            Season = 2024,
+            Season = 2023,
             IsPlayoffs = false
         };
         await _context.Games.AddAsync(existingGame);
@@ -238,7 +238,7 @@ public class GameServiceTests : TestBase
         Assert.Equal(1, updatedGame.HomeTeamId);
         Assert.Equal(2, updatedGame.AwayTeamId);
         Assert.Equal(17, updatedGame.Week);
-        Assert.Equal(2024, updatedGame.Season);
+        Assert.Equal(2023, updatedGame.Season);
         Assert.False(updatedGame.IsPlayoffs);
         Assert.Equal(1, updatedGame.WinningTeamId);  // Home team won
 
@@ -250,7 +250,7 @@ public class GameServiceTests : TestBase
         Assert.Equal(2, newGame.HomeTeamId);  // team2
         Assert.Equal(1, newGame.AwayTeamId);  // team1
         Assert.Equal(17, newGame.Week);
-        Assert.Equal(2024, newGame.Season);
+        Assert.Equal(2023, newGame.Season);
         Assert.False(newGame.IsPlayoffs);
         Assert.Null(newGame.WinningTeamId);  // No winner yet
     }
