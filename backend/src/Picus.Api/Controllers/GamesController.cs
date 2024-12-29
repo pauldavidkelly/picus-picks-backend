@@ -38,4 +38,25 @@ public class GamesController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Gets a specific game by its ID
+    /// </summary>
+    /// <param name="id">The ID of the game to retrieve</param>
+    /// <returns>The game if found, or NotFound if not found</returns>
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetGameById(int id)
+    {
+        var game = await _gameService.GetGameByIdAsync(id);
+        
+        if (game == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(game);
+    }
 }

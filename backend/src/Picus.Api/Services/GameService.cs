@@ -8,6 +8,7 @@ namespace Picus.Api.Services;
 public interface IGameService
 {
     Task<IEnumerable<Game>> UpsertGamesForSeasonAsync(int leagueId, int season);
+    Task<Game?> GetGameByIdAsync(int id);
 }
 
 public class GameService : IGameService
@@ -91,5 +92,13 @@ public class GameService : IGameService
         }
 
         return upsertedGames;
+    }
+
+    public async Task<Game?> GetGameByIdAsync(int id)
+    {
+        return await _dbContext.Games
+            .Include(g => g.HomeTeam)
+            .Include(g => g.AwayTeam)
+            .FirstOrDefaultAsync(g => g.Id == id);
     }
 }

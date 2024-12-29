@@ -275,4 +275,51 @@ public class GameServiceTests : TestBase
         var games = await _context.Games.ToListAsync();
         Assert.Empty(games);
     }
+
+    [Fact]
+    public async Task GetGameByIdAsync_WithExistingGame_ShouldReturnGame()
+    {
+        // Arrange
+        var game = new Models.Game
+        {
+            ExternalGameId = "game1",
+            Location = "Test Stadium",
+            GameTime = DateTime.SpecifyKind(DateTime.Parse("2024-01-01 20:00:00"), DateTimeKind.Utc),
+            PickDeadline = DateTime.SpecifyKind(DateTime.Parse("2024-01-01 20:00:00"), DateTimeKind.Utc),
+            HomeTeamId = 1,
+            AwayTeamId = 2,
+            HomeTeamScore = 21,
+            AwayTeamScore = 14,
+            IsCompleted = true,
+            Week = 17,
+            Season = 2023,
+            IsPlayoffs = false
+        };
+        await _context.Games.AddAsync(game);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _gameService.GetGameByIdAsync(game.Id);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(game.Id, result.Id);
+        Assert.Equal("Test Stadium", result.Location);
+        Assert.Equal(21, result.HomeTeamScore);
+        Assert.Equal(14, result.AwayTeamScore);
+        Assert.NotNull(result.HomeTeam);
+        Assert.NotNull(result.AwayTeam);
+        Assert.Equal("Home Team", result.HomeTeam.Name);
+        Assert.Equal("Away Team", result.AwayTeam.Name);
+    }
+
+    [Fact]
+    public async Task GetGameByIdAsync_WithNonExistingGame_ShouldReturnNull()
+    {
+        // Act
+        var result = await _gameService.GetGameByIdAsync(999);
+
+        // Assert
+        Assert.Null(result);
+    }
 }
