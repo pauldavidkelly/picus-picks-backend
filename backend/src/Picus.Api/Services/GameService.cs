@@ -30,25 +30,25 @@ public class GameService : IGameService
     {
         // Get games from SportsDb API
         var sportsDbGames = await _sportsDbService.GetLeagueScheduleAsync(leagueId, season);
-        
+
         // Filter out preseason games (week 500)
         sportsDbGames = sportsDbGames.Where(g => GameMapper.ParseWeek(g.IntRound) != 500).ToList();
-        
+
         var upsertedGames = new List<Game>();
-        
+
         foreach (var sportsDbGame in sportsDbGames)
         {
             // Look up teams by their external IDs
             var homeTeam = await _dbContext.Teams.FirstOrDefaultAsync(t => t.ExternalTeamId == sportsDbGame.HomeTeamId);
             var awayTeam = await _dbContext.Teams.FirstOrDefaultAsync(t => t.ExternalTeamId == sportsDbGame.AwayTeamId);
-            
+
             if (homeTeam == null || awayTeam == null)
             {
                 // Log warning and skip this game if teams not found
                 Console.WriteLine($"Warning: Could not find teams for game {sportsDbGame.Id}. Home team ID: {sportsDbGame.HomeTeamId}, Away team ID: {sportsDbGame.AwayTeamId}");
                 continue;
             }
-            
+
             // Map the SportsDb game to our model
             var game = sportsDbGame.ToGameEntity();
             game.HomeTeamId = homeTeam.Id;
@@ -61,7 +61,7 @@ public class GameService : IGameService
                                     game.AwayTeamScore > game.HomeTeamScore ? game.AwayTeamId :
                                     null; // null for tie games
             }
-            
+
             // Try to find existing game by external ID
             var existingGame = await _dbContext.Games
                 .FirstOrDefaultAsync(g => g.ExternalGameId == game.ExternalGameId);
@@ -78,7 +78,7 @@ public class GameService : IGameService
                 existingGame.HomeTeamId = game.HomeTeamId;
                 existingGame.AwayTeamId = game.AwayTeamId;
                 existingGame.WinningTeamId = game.WinningTeamId;
-                
+
                 await _gameRepository.UpdateAsync(existingGame);
                 upsertedGames.Add(existingGame);
             }
