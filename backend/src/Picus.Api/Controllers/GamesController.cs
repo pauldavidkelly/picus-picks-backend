@@ -75,4 +75,19 @@ public class GamesController : ControllerBase
         var games = await _gameService.GetGamesByWeekAndSeasonAsync(week, season);
         return Ok(games);
     }
+
+    /// <summary>
+    /// Gets all games for a specific team in a season
+    /// </summary>
+    /// <param name="teamId">The team ID</param>
+    /// <param name="season">The season year</param>
+    /// <returns>List of games for the specified team and season</returns>
+    [HttpGet("team/{teamId}/season/{season}")]
+    [ProducesResponseType(typeof(IEnumerable<GameDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetTeamGamesBySeason(int teamId, int season)
+    {
+        var games = await _gameService.GetTeamGamesBySeasonAsync(teamId, season);
+        return Ok(games);
+    }
 }
