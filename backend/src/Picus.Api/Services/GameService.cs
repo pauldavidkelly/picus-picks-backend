@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Picus.Api.Data;
-using Picus.Api.Mappers;
 using Picus.Api.Models;
 using Picus.Api.Models.DTOs;
+using Picus.Api.Mappers;
 
 namespace Picus.Api.Services;
 
@@ -105,65 +105,7 @@ public class GameService : IGameService
             .Include(g => g.WinningTeam)
             .FirstOrDefaultAsync(g => g.Id == id);
 
-        if (game == null)
-            return null;
-
-        return new GameDTO
-        {
-            Id = game.Id,
-            ExternalGameId = game.ExternalGameId,
-            GameTime = game.GameTime,
-            PickDeadline = game.PickDeadline,
-            Week = game.Week,
-            Season = game.Season,
-            IsCompleted = game.IsCompleted,
-            IsPlayoffs = game.IsPlayoffs,
-            Location = game.Location,
-            HomeTeamScore = game.HomeTeamScore,
-            AwayTeamScore = game.AwayTeamScore,
-            HomeTeam = new TeamDTO
-            {
-                Id = game.HomeTeam.Id,
-                Name = game.HomeTeam.Name,
-                Abbreviation = game.HomeTeam.Abbreviation,
-                City = game.HomeTeam.City,
-                IconUrl = game.HomeTeam.IconUrl,
-                BannerUrl = game.HomeTeam.BannerUrl,
-                PrimaryColor = game.HomeTeam.PrimaryColor,
-                SecondaryColor = game.HomeTeam.SecondaryColor,
-                TertiaryColor = game.HomeTeam.TertiaryColor,
-                Conference = game.HomeTeam.Conference,
-                Division = game.HomeTeam.Division
-            },
-            AwayTeam = new TeamDTO
-            {
-                Id = game.AwayTeam.Id,
-                Name = game.AwayTeam.Name,
-                Abbreviation = game.AwayTeam.Abbreviation,
-                City = game.AwayTeam.City,
-                IconUrl = game.AwayTeam.IconUrl,
-                BannerUrl = game.AwayTeam.BannerUrl,
-                PrimaryColor = game.AwayTeam.PrimaryColor,
-                SecondaryColor = game.AwayTeam.SecondaryColor,
-                TertiaryColor = game.AwayTeam.TertiaryColor,
-                Conference = game.AwayTeam.Conference,
-                Division = game.AwayTeam.Division
-            },
-            WinningTeam = game.WinningTeam == null ? null : new TeamDTO
-            {
-                Id = game.WinningTeam.Id,
-                Name = game.WinningTeam.Name,
-                Abbreviation = game.WinningTeam.Abbreviation,
-                City = game.WinningTeam.City,
-                IconUrl = game.WinningTeam.IconUrl,
-                BannerUrl = game.WinningTeam.BannerUrl,
-                PrimaryColor = game.WinningTeam.PrimaryColor,
-                SecondaryColor = game.WinningTeam.SecondaryColor,
-                TertiaryColor = game.WinningTeam.TertiaryColor,
-                Conference = game.WinningTeam.Conference,
-                Division = game.WinningTeam.Division
-            }
-        };
+        return game?.ToGameDTO();
     }
 
     public async Task<IEnumerable<GameDTO>> GetGamesByWeekAndSeasonAsync(int week, int season)
@@ -176,62 +118,7 @@ public class GameService : IGameService
             .OrderBy(g => g.GameTime)
             .ToListAsync();
 
-        return games.Select(game => new GameDTO
-        {
-            Id = game.Id,
-            ExternalGameId = game.ExternalGameId,
-            GameTime = game.GameTime,
-            PickDeadline = game.PickDeadline,
-            Week = game.Week,
-            Season = game.Season,
-            IsCompleted = game.IsCompleted,
-            IsPlayoffs = game.IsPlayoffs,
-            Location = game.Location,
-            HomeTeamScore = game.HomeTeamScore,
-            AwayTeamScore = game.AwayTeamScore,
-            HomeTeam = new TeamDTO
-            {
-                Id = game.HomeTeam.Id,
-                Name = game.HomeTeam.Name,
-                Abbreviation = game.HomeTeam.Abbreviation,
-                City = game.HomeTeam.City,
-                IconUrl = game.HomeTeam.IconUrl,
-                BannerUrl = game.HomeTeam.BannerUrl,
-                PrimaryColor = game.HomeTeam.PrimaryColor,
-                SecondaryColor = game.HomeTeam.SecondaryColor,
-                TertiaryColor = game.HomeTeam.TertiaryColor,
-                Conference = game.HomeTeam.Conference,
-                Division = game.HomeTeam.Division
-            },
-            AwayTeam = new TeamDTO
-            {
-                Id = game.AwayTeam.Id,
-                Name = game.AwayTeam.Name,
-                Abbreviation = game.AwayTeam.Abbreviation,
-                City = game.AwayTeam.City,
-                IconUrl = game.AwayTeam.IconUrl,
-                BannerUrl = game.AwayTeam.BannerUrl,
-                PrimaryColor = game.AwayTeam.PrimaryColor,
-                SecondaryColor = game.AwayTeam.SecondaryColor,
-                TertiaryColor = game.AwayTeam.TertiaryColor,
-                Conference = game.AwayTeam.Conference,
-                Division = game.AwayTeam.Division
-            },
-            WinningTeam = game.WinningTeam == null ? null : new TeamDTO
-            {
-                Id = game.WinningTeam.Id,
-                Name = game.WinningTeam.Name,
-                Abbreviation = game.WinningTeam.Abbreviation,
-                City = game.WinningTeam.City,
-                IconUrl = game.WinningTeam.IconUrl,
-                BannerUrl = game.WinningTeam.BannerUrl,
-                PrimaryColor = game.WinningTeam.PrimaryColor,
-                SecondaryColor = game.WinningTeam.SecondaryColor,
-                TertiaryColor = game.WinningTeam.TertiaryColor,
-                Conference = game.WinningTeam.Conference,
-                Division = game.WinningTeam.Division
-            }
-        }).ToList();
+        return games.Select(g => g.ToGameDTO());
     }
 
     public async Task<IEnumerable<GameDTO>> GetTeamGamesBySeasonAsync(int teamId, int season)
@@ -245,61 +132,6 @@ public class GameService : IGameService
             .ThenBy(g => g.GameTime)
             .ToListAsync();
 
-        return games.Select(game => new GameDTO
-        {
-            Id = game.Id,
-            ExternalGameId = game.ExternalGameId,
-            GameTime = game.GameTime,
-            PickDeadline = game.PickDeadline,
-            Week = game.Week,
-            Season = game.Season,
-            IsCompleted = game.IsCompleted,
-            IsPlayoffs = game.IsPlayoffs,
-            Location = game.Location,
-            HomeTeamScore = game.HomeTeamScore,
-            AwayTeamScore = game.AwayTeamScore,
-            HomeTeam = new TeamDTO
-            {
-                Id = game.HomeTeam.Id,
-                Name = game.HomeTeam.Name,
-                Abbreviation = game.HomeTeam.Abbreviation,
-                City = game.HomeTeam.City,
-                IconUrl = game.HomeTeam.IconUrl,
-                BannerUrl = game.HomeTeam.BannerUrl,
-                PrimaryColor = game.HomeTeam.PrimaryColor,
-                SecondaryColor = game.HomeTeam.SecondaryColor,
-                TertiaryColor = game.HomeTeam.TertiaryColor,
-                Conference = game.HomeTeam.Conference,
-                Division = game.HomeTeam.Division
-            },
-            AwayTeam = new TeamDTO
-            {
-                Id = game.AwayTeam.Id,
-                Name = game.AwayTeam.Name,
-                Abbreviation = game.AwayTeam.Abbreviation,
-                City = game.AwayTeam.City,
-                IconUrl = game.AwayTeam.IconUrl,
-                BannerUrl = game.AwayTeam.BannerUrl,
-                PrimaryColor = game.AwayTeam.PrimaryColor,
-                SecondaryColor = game.AwayTeam.SecondaryColor,
-                TertiaryColor = game.AwayTeam.TertiaryColor,
-                Conference = game.AwayTeam.Conference,
-                Division = game.AwayTeam.Division
-            },
-            WinningTeam = game.WinningTeam == null ? null : new TeamDTO
-            {
-                Id = game.WinningTeam.Id,
-                Name = game.WinningTeam.Name,
-                Abbreviation = game.WinningTeam.Abbreviation,
-                City = game.WinningTeam.City,
-                IconUrl = game.WinningTeam.IconUrl,
-                BannerUrl = game.WinningTeam.BannerUrl,
-                PrimaryColor = game.WinningTeam.PrimaryColor,
-                SecondaryColor = game.WinningTeam.SecondaryColor,
-                TertiaryColor = game.WinningTeam.TertiaryColor,
-                Conference = game.WinningTeam.Conference,
-                Division = game.WinningTeam.Division
-            }
-        }).ToList();
+        return games.Select(g => g.ToGameDTO());
     }
 }
