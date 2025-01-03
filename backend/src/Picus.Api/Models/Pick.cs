@@ -5,7 +5,9 @@ public class Pick : BaseEntity
     public int UserId { get; set; }
     public int GameId { get; set; }
     public int SelectedTeamId { get; set; }
+    public DateTime SubmissionTime { get; set; }
     public bool? IsCorrect { get; set; }
+    public string? Notes { get; set; }
     public int Points { get; set; }
     
     // Navigation properties

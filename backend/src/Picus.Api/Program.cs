@@ -17,6 +17,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 builder.Services.AddHttpClient<ISportsDbService, SportsDbService>();
+builder.Services.AddScoped<IPickService, PickService>();
 
 // Configure Auth0 Settings
 var auth0Settings = builder.Configuration.GetSection("Auth0").Get<Auth0Settings>();
@@ -89,6 +90,8 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+builder.Services.AddLogging();
 
 var app = builder.Build();
 
