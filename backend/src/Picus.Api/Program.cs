@@ -117,6 +117,7 @@ app.UseCors("AllowFrontend");
 
 // Add authentication middleware
 app.UseAuthentication();
+app.UseEmailValidation();
 app.UseAuthorization();
 
 app.MapControllers();
