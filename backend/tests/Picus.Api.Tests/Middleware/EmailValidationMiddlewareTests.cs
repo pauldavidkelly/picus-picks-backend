@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Picus.Api.Middleware;
 using Picus.Api.Services;
+using System.Security.Claims;
 using System.Text.Json;
 using Xunit;
 
@@ -93,13 +94,16 @@ public class EmailValidationMiddlewareTests
         VerifyWarningLogged($"Access attempt from unauthorized email: {UnauthorizedEmail}");
     }
 
-    [Fact]
-    public async Task InvokeAsync_AuthorizedEmail_PassesThrough()
+    [Theory]
+    [InlineData(ClaimTypes.Email)]
+    [InlineData("email")]
+    [InlineData("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")]
+    public async Task InvokeAsync_AuthorizedEmail_WithClaimType_PassesThrough(string claimType)
     {
         // Arrange
         var context = _contextBuilder
             .WithAuthentication()
-            .WithEmail(ValidEmail)
+            .WithEmail(ValidEmail, claimType)
             .Build();
 
         _emailValidationServiceMock

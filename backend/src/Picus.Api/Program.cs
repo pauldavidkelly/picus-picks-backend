@@ -39,6 +39,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             NameClaimType = "name",
             RoleClaimType = "https://picus-picks/roles"
         };
+        options.MapInboundClaims = true;
+        options.SaveToken = true;
     });
 
 // Add DbContext

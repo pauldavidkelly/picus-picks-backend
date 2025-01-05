@@ -12,6 +12,12 @@ public class EmailValidationMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<EmailValidationMiddleware> _logger;
+    private static readonly string[] EmailClaimTypes = new[]
+    {
+        ClaimTypes.Email,
+        "email",  // Auth0's email claim type
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"  // Another common email claim type
+    };
 
     public EmailValidationMiddleware(
         RequestDelegate next,
@@ -23,17 +29,19 @@ public class EmailValidationMiddleware
 
     public async Task InvokeAsync(HttpContext context, IEmailValidationService emailValidationService)
     {
-        // Skip validation for non-authenticated requests
         if (!context.User.Identity?.IsAuthenticated ?? true)
         {
             await _next(context);
             return;
         }
 
-        var emailClaim = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+        var emailClaim = context.User.Claims
+            .FirstOrDefault(c => EmailClaimTypes.Contains(c.Type));
+
         if (emailClaim == null)
         {
-            _logger.LogWarning("Authenticated request without email claim");
+            _logger.LogWarning("Authenticated request without email claim. Available claims: {Claims}", 
+                string.Join(", ", context.User.Claims.Select(c => $"{c.Type}: {c.Value}")));
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await WriteJsonResponse(context, "Email claim is required.");
             return;
@@ -43,7 +51,7 @@ public class EmailValidationMiddleware
         {
             _logger.LogWarning("Access attempt from unauthorized email: {Email}", emailClaim.Value);
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await WriteJsonResponse(context, "This site is currently invitation-only. If you believe you should have access, please contact the administrator.");
+            await WriteJsonResponse(context, "This site is currently invitation-only");
             return;
         }
 

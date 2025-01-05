@@ -21,9 +21,9 @@ public class TestHttpContextBuilder
         _isAuthenticated = false;
     }
 
-    public TestHttpContextBuilder WithEmail(string email)
+    public TestHttpContextBuilder WithEmail(string email, string claimType = "email")
     {
-        _claims.Add(new Claim(ClaimTypes.Email, email));
+        _claims.Add(new Claim(claimType, email));
         return this;
     }
 
