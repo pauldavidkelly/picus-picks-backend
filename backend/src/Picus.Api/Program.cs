@@ -22,6 +22,10 @@ builder.Services.AddScoped<IPickService, PickService>();
 // Configure Auth0 Settings
 var auth0Settings = builder.Configuration.GetSection("Auth0").Get<Auth0Settings>();
 builder.Services.Configure<Auth0Settings>(builder.Configuration.GetSection("Auth0"));
+// Configure AllowedEmails
+builder.Services.Configure<AllowedEmailsConfig>(
+    builder.Configuration.GetSection(AllowedEmailsConfig.SectionName));
+builder.Services.AddScoped<IEmailValidationService, EmailValidationService>();
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
