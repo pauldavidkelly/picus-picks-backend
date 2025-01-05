@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Picus.Api.Configuration;
 using Picus.Api.Data;
+using Picus.Api.Middleware;
 using Picus.Api.Services;
 using System.Text.Json.Serialization;
 
