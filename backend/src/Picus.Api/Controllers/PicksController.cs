@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Picus.Api.Models.DTOs;
 using Picus.Api.Services;
+using System.Security.Claims;
 
 namespace Picus.Api.Controllers;
 
@@ -11,11 +12,13 @@ namespace Picus.Api.Controllers;
 public class PicksController : ControllerBase
 {
     private readonly IPickService _pickService;
+    private readonly IUserService _userService;
     private readonly ILogger<PicksController> _logger;
 
-    public PicksController(IPickService pickService, ILogger<PicksController> logger)
+    public PicksController(IPickService pickService, IUserService userService, ILogger<PicksController> logger)
     {
         _pickService = pickService;
+        _userService = userService;
         _logger = logger;
     }
 
@@ -27,8 +30,9 @@ public class PicksController : ControllerBase
     {
         try
         {
-            var userId = int.Parse(User.FindFirst("sub")?.Value ?? throw new InvalidOperationException("User ID not found"));
-            var pick = await _pickService.SubmitPickAsync(userId, pickDto);
+            var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException("User ID not found");
+            var user = await _userService.GetUserByAuth0IdAsync(auth0Id) ?? throw new InvalidOperationException("User not found");
+            var pick = await _pickService.SubmitPickAsync(user.Id, pickDto);
             return Ok(pick);
         }
         catch (ArgumentException ex)
@@ -56,9 +60,10 @@ public class PicksController : ControllerBase
     {
         try
         {
-            var userId = int.Parse(User.FindFirst("sub")?.Value ?? throw new InvalidOperationException("User ID not found"));
-            var picks = await _pickService.GetUserPicksByWeekAsync(userId, week, season);
-            var status = await _pickService.GetPickStatusAsync(userId, week, season);
+            var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException("User ID not found");
+            var user = await _userService.GetUserByAuth0IdAsync(auth0Id) ?? throw new InvalidOperationException("User not found");
+            var picks = await _pickService.GetUserPicksByWeekAsync(user.Id, week, season);
+            var status = await _pickService.GetPickStatusAsync(user.Id, week, season);
             
             return Ok(new { picks, status });
         }
@@ -77,9 +82,10 @@ public class PicksController : ControllerBase
     {
         try
         {
-            var userId = int.Parse(User.FindFirst("sub")?.Value ?? throw new InvalidOperationException("User ID not found"));
+            var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException("User ID not found");
+            var user = await _userService.GetUserByAuth0IdAsync(auth0Id) ?? throw new InvalidOperationException("User not found");
             
-            if (!await _pickService.UserBelongsToLeagueAsync(userId, leagueId))
+            if (!await _pickService.UserBelongsToLeagueAsync(user.Id, leagueId))
             {
                 return Forbid();
             }
@@ -104,8 +110,9 @@ public class PicksController : ControllerBase
     {
         try
         {
-            var userId = int.Parse(User.FindFirst("sub")?.Value ?? throw new InvalidOperationException("User ID not found"));
-            var status = await _pickService.GetPickStatusAsync(userId, week, season);
+            var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException("User ID not found");
+            var user = await _userService.GetUserByAuth0IdAsync(auth0Id) ?? throw new InvalidOperationException("User not found");
+            var status = await _pickService.GetPickStatusAsync(user.Id, week, season);
             return Ok(status);
         }
         catch (Exception ex)

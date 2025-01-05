@@ -23,3 +23,7 @@ logs/
 ## Rider
 .idea/
 *.sln.iml
+
+## Windsurf rules
+.windsurfrules
+
