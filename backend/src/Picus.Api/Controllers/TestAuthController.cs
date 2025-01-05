@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Picus.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class TestAuthController : ControllerBase
 {
     [HttpGet]
