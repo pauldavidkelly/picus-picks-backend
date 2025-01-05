@@ -55,19 +55,24 @@ public class PicusDbContext : DbContext
             .HasOne(p => p.User)
             .WithMany(u => u.Picks)
             .HasForeignKey(p => p.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Pick>()
             .HasOne(p => p.Game)
             .WithMany(g => g.Picks)
             .HasForeignKey(p => p.GameId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Pick>()
             .HasOne(p => p.SelectedTeam)
             .WithMany(t => t.Picks)
             .HasForeignKey(p => p.SelectedTeamId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Pick>()
+            .Property(p => p.Notes)
+            .HasColumnType("text")
+            .IsRequired(false);
 
         // League configuration
         modelBuilder.Entity<League>()
