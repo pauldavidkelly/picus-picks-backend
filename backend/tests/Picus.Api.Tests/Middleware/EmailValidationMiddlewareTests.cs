@@ -25,10 +25,7 @@ public class EmailValidationMiddlewareTests
 
     private EmailValidationMiddleware CreateMiddleware(RequestDelegate next)
     {
-        return new EmailValidationMiddleware(
-            next,
-            _emailValidationServiceMock.Object,
-            _loggerMock.Object);
+        return new EmailValidationMiddleware(next, _loggerMock.Object);
     }
 
     [Fact]
@@ -46,7 +43,7 @@ public class EmailValidationMiddlewareTests
         var middleware = CreateMiddleware(next);
 
         // Act
-        await middleware.InvokeAsync(context);
+        await middleware.InvokeAsync(context, _emailValidationServiceMock.Object);
 
         // Assert
         Assert.True(nextCalled, "Next delegate should be called for unauthenticated requests");
@@ -64,7 +61,7 @@ public class EmailValidationMiddlewareTests
         var middleware = CreateMiddleware(_ => Task.CompletedTask);
 
         // Act
-        await middleware.InvokeAsync(context);
+        await middleware.InvokeAsync(context, _emailValidationServiceMock.Object);
 
         // Assert
         Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
@@ -88,7 +85,7 @@ public class EmailValidationMiddlewareTests
         var middleware = CreateMiddleware(_ => Task.CompletedTask);
 
         // Act
-        await middleware.InvokeAsync(context);
+        await middleware.InvokeAsync(context, _emailValidationServiceMock.Object);
 
         // Assert
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
@@ -119,7 +116,7 @@ public class EmailValidationMiddlewareTests
         var middleware = CreateMiddleware(next);
 
         // Act
-        await middleware.InvokeAsync(context);
+        await middleware.InvokeAsync(context, _emailValidationServiceMock.Object);
 
         // Assert
         Assert.True(nextCalled, "Next delegate should be called for authorized emails");
