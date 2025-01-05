@@ -29,6 +29,10 @@ public class PicusDbContext : DbContext
             .HasIndex(u => u.Auth0Id)
             .IsUnique();
 
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
         // Game configuration
         modelBuilder.Entity<Models.Game>()
             .HasOne(g => g.HomeTeam)

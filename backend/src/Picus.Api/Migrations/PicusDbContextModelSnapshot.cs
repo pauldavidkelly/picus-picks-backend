@@ -85,7 +85,7 @@ namespace Picus.Api.Migrations
 
                     b.HasIndex("WinningTeamId");
 
-                    b.ToTable("Games");
+                    b.ToTable("Games", (string)null);
                 });
 
             modelBuilder.Entity("Picus.Api.Models.League", b =>
@@ -113,7 +113,7 @@ namespace Picus.Api.Migrations
 
                     b.HasIndex("AdminUserId");
 
-                    b.ToTable("Leagues");
+                    b.ToTable("Leagues", (string)null);
                 });
 
             modelBuilder.Entity("Picus.Api.Models.Pick", b =>
@@ -153,7 +153,7 @@ namespace Picus.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Picks");
+                    b.ToTable("Picks", (string)null);
                 });
 
             modelBuilder.Entity("Picus.Api.Models.Team", b =>
@@ -214,7 +214,7 @@ namespace Picus.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
 
                     b.HasData(
                         new
@@ -778,7 +778,7 @@ namespace Picus.Api.Migrations
 
                     b.HasIndex("LeagueId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Picus.Api.Models.Game", b =>
