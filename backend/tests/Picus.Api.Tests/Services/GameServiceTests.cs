@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Picus.Api.Data;
 using Picus.Api.Models;
@@ -11,13 +12,15 @@ namespace Picus.Api.Tests.Services;
 public class GameServiceTests : TestBase
 {
     private readonly Mock<ISportsDbService> _mockSportsDbService;
+    private readonly Mock<ILogger<Repository<Models.Game>>> _mockLogger;
     private readonly IRepository<Models.Game> _gameRepository;
     private readonly GameService _gameService;
 
     public GameServiceTests()
     {
         _mockSportsDbService = new Mock<ISportsDbService>();
-        _gameRepository = new Repository<Models.Game>(_context);
+        _mockLogger = new Mock<ILogger<Repository<Models.Game>>>();
+        _gameRepository = new Repository<Models.Game>(_context, _mockLogger.Object);
         _gameService = new GameService(_gameRepository, _mockSportsDbService.Object, _context);
 
         // Add test teams to context
@@ -274,6 +277,77 @@ public class GameServiceTests : TestBase
         Assert.Empty(result);
         var games = await _context.Games.ToListAsync();
         Assert.Empty(games);
+    }
+
+    [Fact]
+    public async Task UpsertGamesForSeasonAsync_WithPlayoffGames_ShouldHandleCorrectly()
+    {
+        // Arrange
+        var leagueId = 1;
+        var season = 2023;
+        var sportsDbGames = new List<Models.SportsDb.Game>
+        {
+            new()
+            {
+                Id = "playoff1",
+                Date = "2024-01-13",  // Wild Card weekend
+                Time = "20:00:00",
+                StrVenue = "Stadium 1",
+                HomeScore = "28",
+                AwayScore = "21",
+                HomeTeamId = "team1",
+                AwayTeamId = "team2",
+                IntRound = "160"  // Wild Card Round
+            },
+            new()
+            {
+                Id = "playoff2",
+                Date = "2024-01-20",  // Divisional round
+                Time = "19:30:00",
+                StrVenue = "Stadium 2",
+                HomeScore = "35",
+                AwayScore = "17",
+                HomeTeamId = "team2",
+                AwayTeamId = "team1",
+                IntRound = "161"  // Divisional Round
+            }
+        };
+
+        _mockSportsDbService
+            .Setup(x => x.GetLeagueScheduleAsync(leagueId, season))
+            .ReturnsAsync(sportsDbGames);
+
+        // Act
+        var result = await _gameService.UpsertGamesForSeasonAsync(leagueId, season);
+
+        // Assert
+        Assert.Equal(2, result.Count());
+        var games = await _context.Games.ToListAsync();
+        Assert.Equal(2, games.Count);
+        
+        var wildCardGame = games.First(g => g.ExternalGameId == "playoff1");
+        Assert.Equal("Stadium 1", wildCardGame.Location);
+        Assert.Equal(28, wildCardGame.HomeTeamScore);
+        Assert.Equal(21, wildCardGame.AwayTeamScore);
+        Assert.True(wildCardGame.IsCompleted);
+        Assert.Equal(1, wildCardGame.HomeTeamId);
+        Assert.Equal(2, wildCardGame.AwayTeamId);
+        Assert.Equal(19, wildCardGame.Week);  // Week 19 is Wild Card round
+        Assert.Equal(2023, wildCardGame.Season);
+        Assert.True(wildCardGame.IsPlayoffs);
+        Assert.Equal(1, wildCardGame.WinningTeamId);
+
+        var divisionalGame = games.First(g => g.ExternalGameId == "playoff2");
+        Assert.Equal("Stadium 2", divisionalGame.Location);
+        Assert.Equal(35, divisionalGame.HomeTeamScore);
+        Assert.Equal(17, divisionalGame.AwayTeamScore);
+        Assert.True(divisionalGame.IsCompleted);
+        Assert.Equal(2, divisionalGame.HomeTeamId);
+        Assert.Equal(1, divisionalGame.AwayTeamId);
+        Assert.Equal(20, divisionalGame.Week);  // Week 20 is Divisional round
+        Assert.Equal(2023, divisionalGame.Season);
+        Assert.True(divisionalGame.IsPlayoffs);
+        Assert.Equal(2, divisionalGame.WinningTeamId);
     }
 
     [Fact]

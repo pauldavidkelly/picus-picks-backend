@@ -11,7 +11,8 @@ namespace Picus.Api.Tests.Middleware;
 
 public class EmailValidationMiddlewareTests
 {
-    private readonly Mock<IEmailValidationService> _emailValidationServiceMock;
+    private readonly Mock<IEmailValidationService> _mockEmailValidationService;
+    private readonly Mock<IUserService> _mockUserService;
     private readonly Mock<ILogger<EmailValidationMiddleware>> _loggerMock;
     private readonly TestHttpContextBuilder _contextBuilder;
     private const string ValidEmail = "test@example.com";
@@ -19,7 +20,8 @@ public class EmailValidationMiddlewareTests
 
     public EmailValidationMiddlewareTests()
     {
-        _emailValidationServiceMock = new Mock<IEmailValidationService>();
+        _mockEmailValidationService = new Mock<IEmailValidationService>();
+        _mockUserService = new Mock<IUserService>();
         _loggerMock = new Mock<ILogger<EmailValidationMiddleware>>();
         _contextBuilder = new TestHttpContextBuilder();
     }
@@ -44,7 +46,7 @@ public class EmailValidationMiddlewareTests
         var middleware = CreateMiddleware(next);
 
         // Act
-        await middleware.InvokeAsync(context, _emailValidationServiceMock.Object);
+        await middleware.InvokeAsync(context, _mockEmailValidationService.Object, _mockUserService.Object);
 
         // Assert
         Assert.True(nextCalled, "Next delegate should be called for unauthenticated requests");
@@ -62,7 +64,7 @@ public class EmailValidationMiddlewareTests
         var middleware = CreateMiddleware(_ => Task.CompletedTask);
 
         // Act
-        await middleware.InvokeAsync(context, _emailValidationServiceMock.Object);
+        await middleware.InvokeAsync(context, _mockEmailValidationService.Object, _mockUserService.Object);
 
         // Assert
         Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
@@ -79,14 +81,14 @@ public class EmailValidationMiddlewareTests
             .WithEmail(UnauthorizedEmail)
             .Build();
 
-        _emailValidationServiceMock
+        _mockEmailValidationService
             .Setup(x => x.IsEmailAllowed(UnauthorizedEmail))
             .Returns(false);
 
         var middleware = CreateMiddleware(_ => Task.CompletedTask);
 
         // Act
-        await middleware.InvokeAsync(context, _emailValidationServiceMock.Object);
+        await middleware.InvokeAsync(context, _mockEmailValidationService.Object, _mockUserService.Object);
 
         // Assert
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
@@ -106,7 +108,7 @@ public class EmailValidationMiddlewareTests
             .WithEmail(ValidEmail, claimType)
             .Build();
 
-        _emailValidationServiceMock
+        _mockEmailValidationService
             .Setup(x => x.IsEmailAllowed(ValidEmail))
             .Returns(true);
 
@@ -120,11 +122,26 @@ public class EmailValidationMiddlewareTests
         var middleware = CreateMiddleware(next);
 
         // Act
-        await middleware.InvokeAsync(context, _emailValidationServiceMock.Object);
+        await middleware.InvokeAsync(context, _mockEmailValidationService.Object, _mockUserService.Object);
 
         // Assert
         Assert.True(nextCalled, "Next delegate should be called for authorized emails");
         Assert.Equal(200, context.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_NoEmail_ReturnsBadRequest()
+    {
+        // Arrange
+        var middleware = new EmailValidationMiddleware();
+        var context = _contextBuilder.Build();
+        context.Request.Headers["X-Email"] = string.Empty;
+
+        // Act
+        await middleware.InvokeAsync(context, _mockEmailValidationService.Object, _mockUserService.Object);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status400BadRequest, context.Response.StatusCode);
     }
 
     private static async Task AssertResponseContainsMessage(HttpContext context, string expectedMessage)
