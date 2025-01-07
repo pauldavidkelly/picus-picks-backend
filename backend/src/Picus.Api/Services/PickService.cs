@@ -30,6 +30,7 @@ public class PickService : IPickService
 
         if (DateTime.UtcNow > game.PickDeadline)
         {
+            _logger.LogWarning($"Pick deadline has passed for game {game.Id}");
             throw new InvalidOperationException($"Pick deadline has passed for game {game.Id}");
         }
 
