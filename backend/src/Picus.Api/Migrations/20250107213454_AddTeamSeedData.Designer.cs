@@ -12,8 +12,8 @@ using Picus.Api.Data;
 namespace Picus.Api.Migrations
 {
     [DbContext(typeof(PicusDbContext))]
-    [Migration("20241227151325_AddAllNFLTeams")]
-    partial class AddAllNFLTeams
+    [Migration("20250107213454_AddTeamSeedData")]
+    partial class AddTeamSeedData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -133,11 +133,11 @@ namespace Picus.Api.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("GameId1")
-                        .HasColumnType("integer");
-
                     b.Property<bool?>("IsCorrect")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
 
                     b.Property<int>("Points")
                         .HasColumnType("integer");
@@ -145,8 +145,8 @@ namespace Picus.Api.Migrations
                     b.Property<int>("SelectedTeamId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("TeamId")
-                        .HasColumnType("integer");
+                    b.Property<DateTime>("SubmissionTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -154,22 +154,13 @@ namespace Picus.Api.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("GameId");
 
-                    b.HasIndex("GameId1");
-
                     b.HasIndex("SelectedTeamId");
 
-                    b.HasIndex("TeamId");
-
                     b.HasIndex("UserId");
-
-                    b.HasIndex("UserId1");
 
                     b.ToTable("Picks");
                 });
@@ -372,7 +363,7 @@ namespace Picus.Api.Migrations
                             Conference = 0,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 2,
-                            ExternalTeamId = "134930",
+                            ExternalTeamId = "134918",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
                             Name = "Bills",
                             PrimaryColor = "#00338D",
@@ -388,7 +379,7 @@ namespace Picus.Api.Migrations
                             Conference = 0,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 2,
-                            ExternalTeamId = "134931",
+                            ExternalTeamId = "134919",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/mia.png",
                             Name = "Dolphins",
                             PrimaryColor = "#008E97",
@@ -404,7 +395,7 @@ namespace Picus.Api.Migrations
                             Conference = 0,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 2,
-                            ExternalTeamId = "134932",
+                            ExternalTeamId = "134920",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
                             Name = "Patriots",
                             PrimaryColor = "#002244",
@@ -420,7 +411,7 @@ namespace Picus.Api.Migrations
                             Conference = 0,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 2,
-                            ExternalTeamId = "134933",
+                            ExternalTeamId = "134921",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/nyj.png",
                             Name = "Jets",
                             PrimaryColor = "#125740",
@@ -436,7 +427,7 @@ namespace Picus.Api.Migrations
                             Conference = 0,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 3,
-                            ExternalTeamId = "134934",
+                            ExternalTeamId = "134930",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/den.png",
                             Name = "Broncos",
                             PrimaryColor = "#FB4F14",
@@ -452,7 +443,7 @@ namespace Picus.Api.Migrations
                             Conference = 0,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 3,
-                            ExternalTeamId = "134935",
+                            ExternalTeamId = "134931",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png",
                             Name = "Chiefs",
                             PrimaryColor = "#E31837",
@@ -468,7 +459,7 @@ namespace Picus.Api.Migrations
                             Conference = 0,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 3,
-                            ExternalTeamId = "134936",
+                            ExternalTeamId = "134932",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/lv.png",
                             Name = "Raiders",
                             PrimaryColor = "#000000",
@@ -484,7 +475,7 @@ namespace Picus.Api.Migrations
                             Conference = 0,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 3,
-                            ExternalTeamId = "134937",
+                            ExternalTeamId = "135908",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/lac.png",
                             Name = "Chargers",
                             PrimaryColor = "#0080C6",
@@ -644,7 +635,7 @@ namespace Picus.Api.Migrations
                             Conference = 1,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 2,
-                            ExternalTeamId = "134947",
+                            ExternalTeamId = "134935",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png",
                             Name = "Giants",
                             PrimaryColor = "#0B2265",
@@ -660,7 +651,7 @@ namespace Picus.Api.Migrations
                             Conference = 1,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 2,
-                            ExternalTeamId = "134948",
+                            ExternalTeamId = "134936",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png",
                             Name = "Eagles",
                             PrimaryColor = "#004C54",
@@ -692,7 +683,7 @@ namespace Picus.Api.Migrations
                             Conference = 1,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 3,
-                            ExternalTeamId = "134950",
+                            ExternalTeamId = "134946",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/ari.png",
                             Name = "Cardinals",
                             PrimaryColor = "#97233F",
@@ -708,7 +699,7 @@ namespace Picus.Api.Migrations
                             Conference = 1,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 3,
-                            ExternalTeamId = "134951",
+                            ExternalTeamId = "135907",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/lar.png",
                             Name = "Rams",
                             PrimaryColor = "#003594",
@@ -724,7 +715,7 @@ namespace Picus.Api.Migrations
                             Conference = 1,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 3,
-                            ExternalTeamId = "134952",
+                            ExternalTeamId = "134948",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png",
                             Name = "49ers",
                             PrimaryColor = "#AA0000",
@@ -740,7 +731,7 @@ namespace Picus.Api.Migrations
                             Conference = 1,
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Division = 3,
-                            ExternalTeamId = "134953",
+                            ExternalTeamId = "134949",
                             IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png",
                             Name = "Seahawks",
                             PrimaryColor = "#002244",
@@ -768,6 +759,10 @@ namespace Picus.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -792,6 +787,9 @@ namespace Picus.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Auth0Id")
+                        .IsUnique();
+
+                    b.HasIndex("Email")
                         .IsUnique();
 
                     b.HasIndex("LeagueId");
@@ -838,34 +836,22 @@ namespace Picus.Api.Migrations
             modelBuilder.Entity("Picus.Api.Models.Pick", b =>
                 {
                     b.HasOne("Picus.Api.Models.Game", "Game")
-                        .WithMany()
-                        .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Picus.Api.Models.Game", null)
                         .WithMany("Picks")
-                        .HasForeignKey("GameId1");
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Picus.Api.Models.Team", "SelectedTeam")
-                        .WithMany()
-                        .HasForeignKey("SelectedTeamId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Picus.Api.Models.Team", null)
                         .WithMany("Picks")
-                        .HasForeignKey("TeamId");
+                        .HasForeignKey("SelectedTeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Picus.Api.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Picus.Api.Models.User", null)
                         .WithMany("Picks")
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Game");
 

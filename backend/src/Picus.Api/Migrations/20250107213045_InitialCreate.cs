@@ -18,7 +18,7 @@ namespace Picus.Api.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ESPNTeamId = table.Column<string>(type: "text", nullable: false),
+                    ExternalTeamId = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Abbreviation = table.Column<string>(type: "text", nullable: false),
                     City = table.Column<string>(type: "text", nullable: false),
@@ -43,7 +43,7 @@ namespace Picus.Api.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ESPNGameId = table.Column<string>(type: "text", nullable: false),
+                    ExternalGameId = table.Column<string>(type: "text", nullable: false),
                     HomeTeamId = table.Column<int>(type: "integer", nullable: false),
                     AwayTeamId = table.Column<int>(type: "integer", nullable: false),
                     GameTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -104,6 +104,7 @@ namespace Picus.Api.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Auth0Id = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
                     Username = table.Column<string>(type: "text", nullable: false),
                     DisplayName = table.Column<string>(type: "text", nullable: false),
                     TimeZone = table.Column<string>(type: "text", nullable: false),
@@ -132,7 +133,9 @@ namespace Picus.Api.Migrations
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     GameId = table.Column<int>(type: "integer", nullable: false),
                     SelectedTeamId = table.Column<int>(type: "integer", nullable: false),
+                    SubmissionTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsCorrect = table.Column<bool>(type: "boolean", nullable: true),
+                    Notes = table.Column<string>(type: "text", nullable: true),
                     Points = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -145,7 +148,7 @@ namespace Picus.Api.Migrations
                         column: x => x.GameId,
                         principalTable: "Games",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Picks_Teams_SelectedTeamId",
                         column: x => x.SelectedTeamId,
@@ -157,7 +160,7 @@ namespace Picus.Api.Migrations
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -199,6 +202,12 @@ namespace Picus.Api.Migrations
                 name: "IX_Users_Auth0Id",
                 table: "Users",
                 column: "Auth0Id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
                 unique: true);
 
             migrationBuilder.CreateIndex(

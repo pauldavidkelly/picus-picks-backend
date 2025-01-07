@@ -12,8 +12,8 @@ using Picus.Api.Data;
 namespace Picus.Api.Migrations
 {
     [DbContext(typeof(PicusDbContext))]
-    [Migration("20241227143326_RenameEspnGameId")]
-    partial class RenameEspnGameId
+    [Migration("20250107213045_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -42,7 +42,7 @@ namespace Picus.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ESPNGameId")
+                    b.Property<string>("ExternalGameId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -133,11 +133,11 @@ namespace Picus.Api.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("GameId1")
-                        .HasColumnType("integer");
-
                     b.Property<bool?>("IsCorrect")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
 
                     b.Property<int>("Points")
                         .HasColumnType("integer");
@@ -145,8 +145,8 @@ namespace Picus.Api.Migrations
                     b.Property<int>("SelectedTeamId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("TeamId")
-                        .HasColumnType("integer");
+                    b.Property<DateTime>("SubmissionTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -154,22 +154,13 @@ namespace Picus.Api.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("GameId");
 
-                    b.HasIndex("GameId1");
-
                     b.HasIndex("SelectedTeamId");
 
-                    b.HasIndex("TeamId");
-
                     b.HasIndex("UserId");
-
-                    b.HasIndex("UserId1");
 
                     b.ToTable("Picks");
                 });
@@ -254,6 +245,10 @@ namespace Picus.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -280,6 +275,9 @@ namespace Picus.Api.Migrations
                     b.HasIndex("Auth0Id")
                         .IsUnique();
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.HasIndex("LeagueId");
 
                     b.ToTable("Users");
@@ -301,8 +299,7 @@ namespace Picus.Api.Migrations
 
                     b.HasOne("Picus.Api.Models.Team", "WinningTeam")
                         .WithMany()
-                        .HasForeignKey("WinningTeamId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .HasForeignKey("WinningTeamId");
 
                     b.Navigation("AwayTeam");
 
@@ -325,34 +322,22 @@ namespace Picus.Api.Migrations
             modelBuilder.Entity("Picus.Api.Models.Pick", b =>
                 {
                     b.HasOne("Picus.Api.Models.Game", "Game")
-                        .WithMany()
-                        .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Picus.Api.Models.Game", null)
                         .WithMany("Picks")
-                        .HasForeignKey("GameId1");
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Picus.Api.Models.Team", "SelectedTeam")
-                        .WithMany()
-                        .HasForeignKey("SelectedTeamId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Picus.Api.Models.Team", null)
                         .WithMany("Picks")
-                        .HasForeignKey("TeamId");
+                        .HasForeignKey("SelectedTeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Picus.Api.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Picus.Api.Models.User", null)
                         .WithMany("Picks")
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Game");
 

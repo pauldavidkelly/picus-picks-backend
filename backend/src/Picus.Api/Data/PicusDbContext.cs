@@ -83,8 +83,7 @@ public class PicusDbContext : DbContext
 
         if (_seedData)
         {
-            // Teams are now seeded through migrations
-            // SeedTeams(modelBuilder);
+            SeedTeams(modelBuilder);
         }
     }
 
@@ -129,7 +128,7 @@ public class PicusDbContext : DbContext
 
             // NFC East
             new Team { Id = 25, ExternalTeamId = "134946", Name = "Cowboys", Abbreviation = "DAL", City = "Dallas", IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png", BannerUrl = "https://a.espncdn.com/i/teamlogos/nfl/500-dark/dal.png", PrimaryColor = "#003594", SecondaryColor = "#869397", TertiaryColor = "#FFFFFF", Conference = ConferenceType.NFC, Division = DivisionType.East },
-            new Team { Id = 26, ExternalTeamId = "134947", Name = "Giants", Abbreviation = "NYG", City = "New York", IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png", BannerUrl = "https://a.espncdn.com/i/teamlogos/nfl/500-dark/nyg.png", PrimaryColor = "#0B2265", SecondaryColor = "#A71930", TertiaryColor = "#A5ACAF", Conference = ConferenceType.NFC, Division = DivisionType.East },
+            new Team { Id = 26, ExternalTeamId = "134935", Name = "Giants", Abbreviation = "NYG", City = "New York", IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png", BannerUrl = "https://a.espncdn.com/i/teamlogos/nfl/500-dark/nyg.png", PrimaryColor = "#0B2265", SecondaryColor = "#A71930", TertiaryColor = "#A5ACAF", Conference = ConferenceType.NFC, Division = DivisionType.East },
             new Team { Id = 27, ExternalTeamId = "134936", Name = "Eagles", Abbreviation = "PHI", City = "Philadelphia", IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png", BannerUrl = "https://a.espncdn.com/i/teamlogos/nfl/500-dark/phi.png", PrimaryColor = "#004C54", SecondaryColor = "#A5ACAF", TertiaryColor = "#ACC0C6", Conference = ConferenceType.NFC, Division = DivisionType.East },
             new Team { Id = 28, ExternalTeamId = "134949", Name = "Commanders", Abbreviation = "WAS", City = "Washington", IconUrl = "https://a.espncdn.com/i/teamlogos/nfl/500/was.png", BannerUrl = "https://a.espncdn.com/i/teamlogos/nfl/500-dark/was.png", PrimaryColor = "#5A1414", SecondaryColor = "#FFB612", TertiaryColor = "#FFFFFF", Conference = ConferenceType.NFC, Division = DivisionType.East },
 
