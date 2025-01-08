@@ -129,4 +129,31 @@ public class GameMapperTests
         // Act & Assert
         Assert.Throws<ArgumentException>(() => sportsDbGame.ToGameEntity());
     }
+
+    [Theory]
+    [InlineData("160", 19, true)]  // Wild Card Round
+    [InlineData("161", 20, true)]  // Divisional Round
+    [InlineData("162", 21, true)]  // Conference Championships
+    [InlineData("163", 22, true)]  // Super Bowl
+    [InlineData("Week 17", 17, false)]  // Regular season
+    [InlineData("500", 500, false)]  // Preseason
+    public void ToGameEntity_HandlesWeekAndPlayoffStatus_Correctly(string intRound, int expectedWeek, bool expectedIsPlayoffs)
+    {
+        // Arrange
+        var sportsDbGame = new Game
+        {
+            Id = "12345",
+            Date = "2024-01-20",
+            Time = "15:30:00",
+            StrVenue = "Test Stadium",
+            IntRound = intRound
+        };
+
+        // Act
+        var result = sportsDbGame.ToGameEntity();
+
+        // Assert
+        Assert.Equal(expectedWeek, result.Week);
+        Assert.Equal(expectedIsPlayoffs, result.IsPlayoffs);
+    }
 }

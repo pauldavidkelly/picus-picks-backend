@@ -1,16 +1,20 @@
 using Picus.Api.Data;
 using Picus.Api.Models;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace Picus.Api.Tests.Data;
 
 public class RepositoryTests : TestBase
 {
-    private readonly Repository<Team> _repository;
+    private readonly Mock<ILogger<Repository<Team>>> _mockLogger;
+    private readonly IRepository<Team> _repository;
 
     public RepositoryTests()
     {
-        _repository = new Repository<Team>(_context);
+        _mockLogger = new Mock<ILogger<Repository<Team>>>();
+        _repository = new Repository<Team>(_context, _mockLogger.Object);
     }
 
     [Fact]

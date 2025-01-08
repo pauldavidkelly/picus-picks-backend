@@ -57,6 +57,12 @@ public static class GameMapper
         if (string.IsNullOrEmpty(round))
             return 0;
 
+        // Handle playoff weeks
+        if (round == "160") return 19;  // Wild Card Round
+        if (round == "161") return 20;  // Divisional Round
+        if (round == "162") return 21;  // Conference Championships
+        if (round == "163") return 22;  // Super Bowl
+
         // Remove any non-digit characters and parse
         var weekStr = new string(round.Where(char.IsDigit).ToArray());
         if (int.TryParse(weekStr, out int week))
@@ -67,8 +73,8 @@ public static class GameMapper
 
     private static bool DetermineIfPlayoffs(int week)
     {
-        // In NFL, regular season is weeks 1-18
-        return week > 18;
+        // In NFL, regular season is weeks 1-18, playoffs are weeks 19-22
+        return week >= 19 && week <= 22;
     }
 
     private static int DetermineSeason(DateTime gameTime)
