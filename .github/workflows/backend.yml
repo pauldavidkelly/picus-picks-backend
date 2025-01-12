@@ -1,0 +1,57 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'PicusPicks.API/**'
+      - 'PicusPicks.API.Tests/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'PicusPicks.API/**'
+      - 'PicusPicks.API.Tests/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore
+    
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Publish
+      run: dotnet publish PicusPicks.API/PicusPicks.API.csproj -c Release -o publish
+    
+    - name: Deploy to Azure Web Apps
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'picus-picks-api'  # Replace with your Azure Web App name
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: publish

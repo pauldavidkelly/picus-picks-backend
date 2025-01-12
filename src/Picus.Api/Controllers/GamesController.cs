@@ -31,7 +31,7 @@ public class GamesController : ControllerBase
     {
         try
         {
-            var games = await _gameService.UpsertGamesForSeasonAsync(leagueId, season);
+            var games = await _gameService.UpsertGamesForSeasonAsync(leagueId, 2024);
             return Ok(games);
         }
         catch (Exception ex)
