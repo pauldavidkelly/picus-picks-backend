@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Moq;
 using PicusPicks.Web.Components.Pages;
-using PicusPicks.Web.Models;
+using Picus.Api.Models.DTOs;
 using PicusPicks.Web.Services;
 using PicusPicks.Web.Tests.Helpers;
 
@@ -50,7 +50,7 @@ public class GamesTests : TestContext
     public void LoadGames_DisplaysGames_WhenLoadSucceeds()
     {
         // Arrange
-        var sampleGames = TestData.GetSampleGames();
+        var sampleGames = TestData.GetTestGames();
         _mockGamesService
             .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(sampleGames);
@@ -60,7 +60,7 @@ public class GamesTests : TestContext
 
         // Assert
         var gameCards = cut.FindAll(".card");
-        Assert.Equal(2, gameCards.Count);
+        Assert.Single(gameCards);
 
         // Verify team names are displayed
         var teamNames = cut.FindAll(".team-name");
@@ -89,7 +89,7 @@ public class GamesTests : TestContext
     public void WeekSelection_LoadsNewGames_WhenChanged()
     {
         // Arrange
-        var sampleGames = TestData.GetSampleGames();
+        var sampleGames = TestData.GetTestGames();
         _mockGamesService
             .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(sampleGames);
@@ -130,7 +130,7 @@ public class GamesTests : TestContext
     public void SyncGames_ShowsSuccess_WhenSyncCompletes()
     {
         // Arrange
-        var sampleGames = TestData.GetSampleGames();
+        var sampleGames = TestData.GetTestGames();
         _mockGamesService
             .Setup(x => x.SyncGamesAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(sampleGames);
