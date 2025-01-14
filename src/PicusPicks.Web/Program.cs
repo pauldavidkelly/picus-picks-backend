@@ -66,6 +66,12 @@ builder.Services.AddRazorComponents()
 // Add controller support for Account controller
 builder.Services.AddControllers();
 
+// Configure HTTP client for API communication
+builder.Services.AddHttpClient<IGamesService, GamesService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5172/");
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

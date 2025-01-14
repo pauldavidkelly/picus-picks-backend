@@ -1,6 +1,91 @@
 @page "/games"
 @using Microsoft.AspNetCore.Authorization
+@using PicusPicks.Web.Services
+@using PicusPicks.Web.Models
+@using Microsoft.AspNetCore.Components.Web
+@rendermode InteractiveServer
+@inject IGamesService GamesService
+@inject ILogger<Games> Logger
+@inject IJSRuntime JSRuntime
 @attribute [Authorize]
+
 <PageTitle>Games</PageTitle>
 
-<h1>Games</h1>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Games</h1>
+        <button class="btn btn-primary" @onclick="SyncGames" disabled="@_isSyncing">
+            @if (_isSyncing)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span>Syncing...</span>
+            }
+            else
+            {
+                <span>Sync Games</span>
+            }
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @_errorMessage
+            <button type="button" class="btn-close" @onclick="() => _errorMessage = null" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(_successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @_successMessage
+            <button type="button" class="btn-close" @onclick="() => _successMessage = null" aria-label="Close"></button>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _isSyncing;
+    private string? _errorMessage;
+    private string? _successMessage;
+
+    private async Task SyncGames()
+    {
+        await JSRuntime.InvokeVoidAsync("console.log", "SyncGames method called");
+        
+        _isSyncing = true;
+        _errorMessage = null;
+        _successMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            Console.WriteLine("Syncing games");
+            var games = await GamesService.SyncGamesAsync(4391, 2024);
+            _successMessage = $"Successfully synced {games?.Count() ?? 0} games.";
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("access token"))
+        {
+            Logger.LogError(ex, "Authentication error while syncing games");
+            _errorMessage = "You need to log in again to sync games.";
+            await JSRuntime.InvokeVoidAsync("console.log", "Auth error:", ex.Message);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Logger.LogError(ex, "Unauthorized error while syncing games");
+            _errorMessage = "Your session has expired. Please log in again.";
+            await JSRuntime.InvokeVoidAsync("console.log", "Auth error:", ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error syncing games");
+            _errorMessage = "Failed to sync games. Please try again later.";
+            await JSRuntime.InvokeVoidAsync("console.log", "Error syncing games:", ex.Message);
+        }
+        finally
+        {
+            _isSyncing = false;
+            StateHasChanged();
+        }
+    }
+}
