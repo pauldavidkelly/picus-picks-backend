@@ -3,14 +3,33 @@ namespace PicusPicks.Web.Models;
 public class GameDTO
 {
     public int Id { get; set; }
-    public int ExternalGameId { get; set; }
-    public int HomeTeamId { get; set; }
-    public int AwayTeamId { get; set; }
+    public string ExternalGameId { get; set; } = string.Empty;
     public DateTime GameTime { get; set; }
     public DateTime PickDeadline { get; set; }
-    public int? HomeScore { get; set; }
-    public int? AwayScore { get; set; }
-    public bool IsComplete { get; set; }
     public int Week { get; set; }
     public int Season { get; set; }
+    public bool IsCompleted { get; set; }
+    public bool IsPlayoffs { get; set; }
+    public string Location { get; set; } = string.Empty;
+    public int? HomeTeamScore { get; set; }
+    public int? AwayTeamScore { get; set; }
+    
+    public TeamDTO HomeTeam { get; set; } = null!;
+    public TeamDTO AwayTeam { get; set; } = null!;
+    public TeamDTO? WinningTeam { get; set; }
+}
+
+public class TeamDTO
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Abbreviation { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string IconUrl { get; set; } = string.Empty;
+    public string BannerUrl { get; set; } = string.Empty;
+    public string PrimaryColor { get; set; } = string.Empty;
+    public string SecondaryColor { get; set; } = string.Empty;
+    public string TertiaryColor { get; set; } = string.Empty;
+    public string Conference { get; set; } = string.Empty;
+    public string Division { get; set; } = string.Empty;
 } 

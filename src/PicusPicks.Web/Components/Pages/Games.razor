@@ -14,17 +14,31 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Games</h1>
-        <button class="btn btn-primary" @onclick="SyncGames" disabled="@_isSyncing">
-            @if (_isSyncing)
-            {
-                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                <span>Syncing...</span>
-            }
-            else
-            {
-                <span>Sync Games</span>
-            }
-        </button>
+        <div class="d-flex gap-3">
+            <div class="form-group">
+                <select class="form-select" @bind="_selectedWeek" @bind:after="LoadGames">
+                    @for (int i = 1; i <= 18; i++)
+                    {
+                        <option value="@i">Week @i</option>
+                    }
+                    <option value="19">Wild Card</option>
+                    <option value="20">Divisional</option>
+                    <option value="21">Conference</option>
+                    <option value="22">Super Bowl</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" @onclick="SyncGames" disabled="@_isSyncing">
+                @if (_isSyncing)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Syncing...</span>
+                }
+                else
+                {
+                    <span>Sync Games</span>
+                }
+            </button>
+        </div>
     </div>
 
     @if (!string.IsNullOrEmpty(_errorMessage))
@@ -42,17 +56,134 @@
             <button type="button" class="btn-close" @onclick="() => _successMessage = null" aria-label="Close"></button>
         </div>
     }
+
+    @if (_games == null)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!_games.Any())
+    {
+        <div class="alert alert-info">
+            No games found for Week @_selectedWeek.
+        </div>
+    }
+    else
+    {
+        <div class="games-list">
+            @foreach (var game in _games)
+            {
+                <div class="card mb-3" style="background: linear-gradient(90deg, @game.HomeTeam.PrimaryColor 0%, #1a1a1a 20%, #1a1a1a 80%, @game.AwayTeam.PrimaryColor 100%);">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <img src="@game.HomeTeam.IconUrl" alt="@game.HomeTeam.Name" class="team-logo me-2" />
+                                    <span class="team-name">@($"{game.HomeTeam.City} {game.HomeTeam.Name}")</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                @if (game.IsCompleted)
+                                {
+                                    <div class="score">
+                                        <div class="h3 mb-2">@game.HomeTeamScore - @game.AwayTeamScore</div>
+                                        <div class="badge bg-success">Final</div>
+                                        <div class="stadium text-muted mt-2">@game.Location</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="game-time">
+                                        <div>@game.GameTime.ToLocalTime().ToString("MMM d, yyyy")</div>
+                                        <div class="h4">@game.GameTime.ToLocalTime().ToString("h:mm tt")</div>
+                                        <div class="stadium text-muted">@game.Location</div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center justify-content-end">
+                                    <span class="team-name">@($"{game.AwayTeam.City} {game.AwayTeam.Name}")</span>
+                                    <img src="@game.AwayTeam.IconUrl" alt="@game.AwayTeam.Name" class="team-logo ms-2" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </div>
+
+<style>
+    .team-logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+    }
+    .team-name {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #ffffff;
+    }
+    .score {
+        font-weight: bold;
+        color: #ffffff;
+    }
+    .game-time {
+        color: #ffffff;
+    }
+    .stadium {
+        color: #cccccc !important;
+    }
+    .games-list {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+    }
+</style>
 
 @code {
     private bool _isSyncing;
     private string? _errorMessage;
     private string? _successMessage;
+    private int _selectedWeek = 1;
+    private IEnumerable<GameDTO>? _games;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGames();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadGames();
+    }
+
+    private async Task LoadGames()
+    {
+        try
+        {
+            _games = await GamesService.GetGamesByWeekAndSeasonAsync(_selectedWeek, 2024);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading games");
+            _errorMessage = "Failed to load games. Please try again later.";
+        }
+    }
 
     private async Task SyncGames()
     {
-        await JSRuntime.InvokeVoidAsync("console.log", "SyncGames method called");
-        
         _isSyncing = true;
         _errorMessage = null;
         _successMessage = null;
@@ -60,27 +191,24 @@
 
         try
         {
-            Console.WriteLine("Syncing games");
             var games = await GamesService.SyncGamesAsync(4391, 2024);
             _successMessage = $"Successfully synced {games?.Count() ?? 0} games.";
+            await LoadGames();
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("access token"))
         {
             Logger.LogError(ex, "Authentication error while syncing games");
             _errorMessage = "You need to log in again to sync games.";
-            await JSRuntime.InvokeVoidAsync("console.log", "Auth error:", ex.Message);
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
             Logger.LogError(ex, "Unauthorized error while syncing games");
             _errorMessage = "Your session has expired. Please log in again.";
-            await JSRuntime.InvokeVoidAsync("console.log", "Auth error:", ex.Message);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error syncing games");
             _errorMessage = "Failed to sync games. Please try again later.";
-            await JSRuntime.InvokeVoidAsync("console.log", "Error syncing games:", ex.Message);
         }
         finally
         {

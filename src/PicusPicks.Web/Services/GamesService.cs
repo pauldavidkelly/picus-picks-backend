@@ -9,6 +9,7 @@ namespace PicusPicks.Web.Services;
 public interface IGamesService
 {
     Task<IEnumerable<GameDTO>?> SyncGamesAsync(int leagueId, int season);
+    Task<IEnumerable<GameDTO>?> GetGamesByWeekAndSeasonAsync(int week, int season);
 }
 
 public class GamesService : IGamesService
@@ -25,6 +26,30 @@ public class GamesService : IGamesService
         _httpClient = httpClient;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+    }
+
+    public async Task<IEnumerable<GameDTO>?> GetGamesByWeekAndSeasonAsync(int week, int season)
+    {
+        try
+        {
+            var accessToken = await _httpContextAccessor.HttpContext!.GetTokenAsync("access_token");
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                throw new InvalidOperationException("No access token available");
+            }
+
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await _httpClient.GetAsync($"api/Games/week/{week}/season/{season}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<IEnumerable<GameDTO>>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting games for week {Week} and season {Season}", week, season);
+            throw;
+        }
     }
 
     public async Task<IEnumerable<GameDTO>?> SyncGamesAsync(int leagueId, int season)
