@@ -67,9 +67,34 @@ builder.Services.AddRazorComponents()
 builder.Services.AddControllers();
 
 // Configure HTTP client for API communication
+var jsonOptions = new System.Text.Json.JsonSerializerOptions
+{
+    PropertyNameCaseInsensitive = true,
+    Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+};
+
 builder.Services.AddHttpClient<IGamesService, GamesService>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5172/");
+    var baseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5172/";
+    client.BaseAddress = new Uri(baseUrl);
+}).ConfigureHttpClient(client =>
+{
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+});
+
+builder.Services.AddHttpClient<IPicksService, PicksService>(client =>
+{
+    var baseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5172/";
+    client.BaseAddress = new Uri(baseUrl);
+}).ConfigureHttpClient(client =>
+{
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 });
 
 var app = builder.Build();

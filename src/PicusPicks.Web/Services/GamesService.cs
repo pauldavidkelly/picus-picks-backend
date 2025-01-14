@@ -2,14 +2,16 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
-using PicusPicks.Web.Models;
+using Picus.Api.Models.DTOs;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PicusPicks.Web.Services;
 
 public interface IGamesService
 {
-    Task<IEnumerable<GameDTO>?> SyncGamesAsync(int leagueId, int season);
-    Task<IEnumerable<GameDTO>?> GetGamesByWeekAndSeasonAsync(int week, int season);
+    Task<IEnumerable<GameDTO>> SyncGamesAsync(int leagueId, int season);
+    Task<IEnumerable<GameDTO>> GetGamesByWeekAndSeasonAsync(int week, int season);
 }
 
 public class GamesService : IGamesService
@@ -17,6 +19,7 @@ public class GamesService : IGamesService
     private readonly HttpClient _httpClient;
     private readonly ILogger<GamesService> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public GamesService(
         HttpClient httpClient, 
@@ -26,9 +29,14 @@ public class GamesService : IGamesService
         _httpClient = httpClient;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
     }
 
-    public async Task<IEnumerable<GameDTO>?> GetGamesByWeekAndSeasonAsync(int week, int season)
+    public async Task<IEnumerable<GameDTO>> GetGamesByWeekAndSeasonAsync(int week, int season)
     {
         try
         {
@@ -41,9 +49,10 @@ public class GamesService : IGamesService
             _httpClient.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-            var response = await _httpClient.GetAsync($"api/Games/week/{week}/season/{season}");
+            var response = await _httpClient.GetAsync($"api/games/week/{week}/season/{season}");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<IEnumerable<GameDTO>>();
+            var games = await response.Content.ReadFromJsonAsync<IEnumerable<GameDTO>>(_jsonOptions);
+            return games ?? Enumerable.Empty<GameDTO>();
         }
         catch (Exception ex)
         {
@@ -52,7 +61,7 @@ public class GamesService : IGamesService
         }
     }
 
-    public async Task<IEnumerable<GameDTO>?> SyncGamesAsync(int leagueId, int season)
+    public async Task<IEnumerable<GameDTO>> SyncGamesAsync(int leagueId, int season)
     {
         try
         {
@@ -65,9 +74,10 @@ public class GamesService : IGamesService
             _httpClient.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-            var response = await _httpClient.PostAsync($"api/Games/upsert/{leagueId}/{season}", null);
+            var response = await _httpClient.PostAsync($"api/games/upsert/{leagueId}/{season}", null);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<IEnumerable<GameDTO>>();
+            var games = await response.Content.ReadFromJsonAsync<IEnumerable<GameDTO>>(_jsonOptions);
+            return games ?? Enumerable.Empty<GameDTO>();
         }
         catch (Exception ex)
         {
