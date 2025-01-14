@@ -74,6 +74,9 @@ public class GamesServiceTests
     {
         // Arrange
         var expectedGames = TestData.GetTestGames();
+        var firstGame = expectedGames.FirstOrDefault();
+        Assert.NotNull(firstGame); // Ensure we have test data
+
         var jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -106,7 +109,7 @@ public class GamesServiceTests
         Assert.NotNull(result);
         Assert.Collection(result, 
             item => Assert.Equal(
-                JsonSerializer.Serialize(expectedGames.First(), jsonOptions),
+                JsonSerializer.Serialize(firstGame, jsonOptions),
                 JsonSerializer.Serialize(item, jsonOptions)
             )
         );
