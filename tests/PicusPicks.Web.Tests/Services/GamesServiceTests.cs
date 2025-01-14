@@ -9,6 +9,8 @@ using Moq.Protected;
 using PicusPicks.Web.Models;
 using PicusPicks.Web.Services;
 using PicusPicks.Web.Tests.Helpers;
+using Xunit;
+using System.Security.Claims;
 
 namespace PicusPicks.Web.Tests.Services;
 
@@ -18,12 +20,14 @@ public class GamesServiceTests
     private readonly Mock<ILogger<GamesService>> _mockLogger;
     private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
     private readonly HttpClient _httpClient;
+    private readonly Mock<IAuthenticationService> _mockAuthService;
 
     public GamesServiceTests()
     {
         _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         _mockLogger = new Mock<ILogger<GamesService>>();
         _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
+        _mockAuthService = new Mock<IAuthenticationService>();
         _httpClient = new HttpClient(_mockHttpMessageHandler.Object)
         {
             BaseAddress = new Uri("http://test.com/")
@@ -31,8 +35,20 @@ public class GamesServiceTests
 
         // Setup default authentication token
         var mockHttpContext = new Mock<HttpContext>();
-        mockHttpContext.Setup(x => x.GetTokenAsync("access_token"))
-            .ReturnsAsync("test_token");
+        var authProperties = new AuthenticationProperties();
+        authProperties.SetString(".Token.access_token", "test_token");
+        var ticket = new AuthenticationTicket(
+            new ClaimsPrincipal(),
+            authProperties,
+            "Bearer");
+
+        _mockAuthService
+            .Setup(x => x.AuthenticateAsync(It.IsAny<HttpContext>(), It.IsAny<string>()))
+            .ReturnsAsync(AuthenticateResult.Success(ticket));
+
+        mockHttpContext.Setup(x => x.RequestServices.GetService(typeof(IAuthenticationService)))
+            .Returns(_mockAuthService.Object);
+
         _mockHttpContextAccessor.Setup(x => x.HttpContext)
             .Returns(mockHttpContext.Object);
     }
@@ -58,11 +74,9 @@ public class GamesServiceTests
     public async Task GetGamesByWeekAndSeasonAsync_ThrowsException_WhenNoAuthToken()
     {
         // Arrange
-        var mockHttpContext = new Mock<HttpContext>();
-        mockHttpContext.Setup(x => x.GetTokenAsync("access_token"))
-            .ReturnsAsync((string?)null);
-        _mockHttpContextAccessor.Setup(x => x.HttpContext)
-            .Returns(mockHttpContext.Object);
+        _mockAuthService
+            .Setup(x => x.AuthenticateAsync(It.IsAny<HttpContext>(), It.IsAny<string>()))
+            .ReturnsAsync(AuthenticateResult.NoResult());
         var service = CreateService();
 
         // Act & Assert
@@ -142,7 +156,8 @@ public class GamesServiceTests
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
                     req.Method == expectedMethod && 
-                    req.RequestUri!.PathAndQuery == expectedPath),
+                    req.RequestUri!.ToString() == $"http://test.com/{expectedPath.TrimStart('/')}"
+                ),
                 ItExpr.IsAny<CancellationToken>());
     }
 } 

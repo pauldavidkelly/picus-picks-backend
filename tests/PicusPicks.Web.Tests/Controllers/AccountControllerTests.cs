@@ -39,7 +39,7 @@ public class AccountControllerTests
         authServiceMock.Verify(
             auth => auth.ChallengeAsync(
                 It.IsAny<HttpContext>(),
-                "Auth0",
+                "OpenIdConnect",
                 It.Is<AuthenticationProperties>(p => 
                     p.RedirectUri == returnUrl)),
             Times.Once);
@@ -73,7 +73,7 @@ public class AccountControllerTests
         authServiceMock.Verify(
             auth => auth.SignOutAsync(
                 It.IsAny<HttpContext>(),
-                "Auth0",
+                "OpenIdConnect",
                 It.Is<AuthenticationProperties>(p => 
                     p.RedirectUri == "/")),
             Times.Once);

@@ -1,4 +1,6 @@
-﻿namespace PicusPciks.Web.Tests;
+﻿using Xunit;
+
+namespace PicusPciks.Web.Tests;
 
 public class UnitTest1
 {
