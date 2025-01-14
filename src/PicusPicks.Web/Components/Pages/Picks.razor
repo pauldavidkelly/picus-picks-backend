@@ -105,7 +105,7 @@
                     }
                     else
                     {
-                        <div class="locked-status">
+                        <div class="locked-status @GetPickResultClass(game)">
                             @if (game.IsCompleted)
                             {
                                 <div class="score">
@@ -122,6 +122,12 @@
                                 var pick = _userPicks.First(p => p.GameId == game.Id);
                                 <div class="user-pick">
                                     Your Pick: @GetTeamName(pick.SelectedTeamId)
+                                    @if (game.IsCompleted)
+                                    {
+                                        <div class="pick-result @(IsPickCorrect(game, pick) ? "correct" : "incorrect")">
+                                            @(IsPickCorrect(game, pick) ? "✓ Correct!" : "✗ Incorrect")
+                                        </div>
+                                    }
                                 </div>
                             }
                         </div>
@@ -190,7 +196,7 @@
     }
 
     .progress {
-        background-color: var(--nfl-red);
+        background: linear-gradient(90deg, #ffd700 0%, #4CAF50 100%);
         height: 100%;
         transition: width 0.3s ease;
     }
@@ -283,21 +289,31 @@
 
     .locked-status {
         text-align: center;
+        padding: 1rem;
+        border-radius: 8px;
     }
 
-    .score {
-        font-size: 1.5rem;
+    .locked-status.correct-pick {
+        background-color: rgba(76, 175, 80, 0.1);
+        border: 1px solid #4CAF50;
+    }
+
+    .locked-status.incorrect-pick {
+        background-color: rgba(244, 67, 54, 0.1);
+        border: 1px solid #F44336;
+    }
+
+    .pick-result {
+        margin-top: 0.5rem;
         font-weight: bold;
     }
 
-    .quarter {
-        font-size: 0.9rem;
-        color: #666;
+    .pick-result.correct {
+        color: #4CAF50;
     }
 
-    .user-pick {
-        margin-top: 0.5rem;
-        font-weight: 500;
+    .pick-result.incorrect {
+        color: #F44336;
     }
 
     @@keyframes pulse {
@@ -462,5 +478,25 @@
             Logger.LogError(ex, "Error submitting pick");
             await JSRuntime.InvokeVoidAsync("alert", "Failed to submit pick. Please try again.");
         }
+    }
+
+    private string GetPickResultClass(GameDTO game)
+    {
+        if (!game.IsCompleted) return "";
+        var pick = _userPicks.FirstOrDefault(p => p.GameId == game.Id);
+        if (pick == null) return "";
+        
+        return IsPickCorrect(game, pick) ? "correct-pick" : "incorrect-pick";
+    }
+
+    private bool IsPickCorrect(GameDTO game, VisiblePickDto pick)
+    {
+        if (!game.IsCompleted) return false;
+        
+        var winningTeamId = game.HomeTeamScore > game.AwayTeamScore 
+            ? game.HomeTeam.Id 
+            : game.AwayTeam.Id;
+            
+        return pick.SelectedTeamId == winningTeamId;
     }
 } 
