@@ -1,0 +1,73 @@
+.league-table-container {
+    padding: 1rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.league-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.league-table th,
+.league-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.league-table th {
+    background-color: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+}
+
+.league-table tr:hover {
+    background-color: #f1f5f9;
+}
+
+.loading,
+.error,
+.empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: #64748b;
+}
+
+.error {
+    color: #ef4444;
+}
+
+.success-rate-excellent {
+    color: #22c55e;
+    font-weight: 600;
+}
+
+.success-rate-good {
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+.success-rate-average {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.success-rate-poor {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .league-table-container {
+        padding: 0.5rem;
+    }
+
+    .league-table th,
+    .league-table td {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+}

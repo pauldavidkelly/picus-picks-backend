@@ -8,20 +8,26 @@ namespace Picus.Api.Services;
 
 public class PickService : IPickService
 {
-    private readonly PicusDbContext _context;
+    private readonly PicusDbContext _dbContext;
+    private readonly IGameService _gameService;
     private readonly ILogger<PickService> _logger;
     private readonly IConfiguration _configuration;
 
-    public PickService(PicusDbContext context, ILogger<PickService> logger, IConfiguration configuration)
+    public PickService(
+        PicusDbContext dbContext, 
+        IGameService gameService,
+        ILogger<PickService> logger,
+        IConfiguration configuration)
     {
-        _context = context;
+        _dbContext = dbContext;
+        _gameService = gameService;
         _logger = logger;
         _configuration = configuration;
     }
 
     public async Task<Pick> SubmitPickAsync(int userId, SubmitPickDto pickDto)
     {
-        var game = await _context.Games
+        var game = await _dbContext.Games
             .Include(g => g.HomeTeam)
             .Include(g => g.AwayTeam)
             .FirstOrDefaultAsync(g => g.Id == pickDto.GameId);
@@ -46,7 +52,7 @@ public class PickService : IPickService
         }
 
         // Check for existing pick
-        var existingPick = await _context.Picks
+        var existingPick = await _dbContext.Picks
             .FirstOrDefaultAsync(p => p.UserId == userId && p.GameId == game.Id);
 
         if (existingPick != null)
@@ -56,7 +62,7 @@ public class PickService : IPickService
             existingPick.Notes = pickDto.Notes;
             existingPick.SubmissionTime = DateTime.UtcNow;
             
-            await _context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
             return existingPick;
         }
 
@@ -71,15 +77,15 @@ public class PickService : IPickService
             Points = 0 // Points will be updated when game is completed
         };
 
-        _context.Picks.Add(pick);
-        await _context.SaveChangesAsync();
+        _dbContext.Picks.Add(pick);
+        await _dbContext.SaveChangesAsync();
 
         return pick;
     }
 
     public async Task<IEnumerable<Pick>> GetUserPicksByWeekAsync(int userId, int week, int season)
     {
-        return await _context.Picks
+        return await _dbContext.Picks
             .Include(p => p.Game)
             .Include(p => p.SelectedTeam)
             .Where(p => p.UserId == userId && p.Game.Week == week && p.Game.Season == season)
@@ -88,12 +94,12 @@ public class PickService : IPickService
 
     public async Task<IEnumerable<Pick>> GetLeaguePicksByWeekAsync(int leagueId, int week, int season)
     {
-        var leagueUsers = await _context.Users
+        var leagueUsers = await _dbContext.Users
             .Where(u => u.LeagueId == leagueId)
             .Select(u => u.Id)
             .ToListAsync();
 
-        return await _context.Picks
+        return await _dbContext.Picks
             .Include(p => p.Game)
             .Include(p => p.SelectedTeam)
             .Include(p => p.User)
@@ -109,7 +115,7 @@ public class PickService : IPickService
 
         foreach (var pick in picks)
         {
-            var game = await _context.Games.FindAsync(pick.GameId);
+            var game = await _dbContext.Games.FindAsync(pick.GameId);
             if (game == null) continue;
 
             bool isVisible = DateTime.UtcNow > game.PickDeadline;
@@ -129,7 +135,7 @@ public class PickService : IPickService
 
     public async Task<bool> UserBelongsToLeagueAsync(int userId, int leagueId)
     {
-        var user = await _context.Users
+        var user = await _dbContext.Users
             .FirstOrDefaultAsync(u => u.Id == userId);
             
         return user?.LeagueId == leagueId;
@@ -137,11 +143,11 @@ public class PickService : IPickService
 
     public async Task<PicksStatusDto> GetPickStatusAsync(int userId, int week, int season)
     {
-        var games = await _context.Games
+        var games = await _dbContext.Games
             .Where(g => g.Week == week && g.Season == season)
             .ToListAsync();
 
-        var picks = await _context.Picks
+        var picks = await _dbContext.Picks
             .Where(p => p.UserId == userId && 
                        p.Game.Week == week && 
                        p.Game.Season == season)
@@ -163,9 +169,44 @@ public class PickService : IPickService
         };
     }
 
+    public async Task<IEnumerable<LeagueTableStatsDto>> GetLeagueTableStatsAsync()
+    {
+        try
+        {
+            // Get all picks with their games and users
+            var picks = await _dbContext.Picks
+                .Include(p => p.User)
+                .Include(p => p.Game)
+                .Include(p => p.SelectedTeam)
+                .ToListAsync();
+
+            // Only consider picks for completed games
+            var completedPicks = picks.Where(p => p.Game.IsCompleted).ToList();
+
+            // Group by user and calculate stats
+            var stats = completedPicks
+                .GroupBy(p => p.User)
+                .Select(g => new LeagueTableStatsDto
+                {
+                    DisplayName = g.Key.DisplayName,
+                    CorrectPicks = g.Count(p => p.SelectedTeam.Id == p.Game.WinningTeamId),
+                    TotalPicks = g.Count()
+                })
+                .OrderByDescending(s => s.SuccessRate)
+                .ToList();
+
+            return stats;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting league table stats");
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<Pick>> GetAllPicksByWeekAsync(int week, int season)
     {
-        return await _context.Picks
+        return await _dbContext.Picks
             .Include(p => p.Game)
             .Include(p => p.SelectedTeam)
             .Include(p => p.User)

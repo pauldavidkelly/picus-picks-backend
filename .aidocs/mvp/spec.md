@@ -37,9 +37,9 @@ Still to do:
 - [ ] Create league standings view
 - [ ] Home page shows league view on login
 - [ ] Create login page with background image and login button
-- [ ] Create weekly league picks grid view
+- [X] Create weekly league picks grid view
     - [ ] For completed weeks/games have a win-loss row for each player that week
-- [ ] Create tab on picks page to switch between user picks and league picks
+- [X] Create tab on picks page to switch between user picks and league picks
 - [ ] Get Glenn to login so we have his user account
 - [-] Import picks from Excel
     - [X] Paul's picks
