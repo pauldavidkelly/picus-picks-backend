@@ -41,4 +41,7 @@ Still to do:
     - [ ] For completed weeks/games have a win-loss row for each player that week
 - [ ] Create tab on picks page to switch between user picks and league picks
 - [ ] Get Glenn to login so we have his user account
-- [ ] Import picks from Excel
+- [-] Import picks from Excel
+    - [X] Paul's picks
+    - [-] Glenn's picks
+- [ ] Rename repo to remove backend from the name
