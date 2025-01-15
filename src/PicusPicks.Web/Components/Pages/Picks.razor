@@ -1,0 +1,532 @@
+@page "/picks"
+@using Microsoft.AspNetCore.Authorization
+@using PicusPicks.Web.Services
+@using Microsoft.AspNetCore.Components.Web
+@using Picus.Api.Models.DTOs
+@using PicusPicks.Web.Utilities
+@rendermode InteractiveServer
+@inject IPicksService PicksService
+@inject IGamesService GamesService
+@inject ILogger<Picks> Logger
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+
+<PageTitle>Picks</PageTitle>
+
+<div class="container">
+    <!-- Week Navigation Bar -->
+    <div class="week-nav">
+        <button class="nav-btn" @onclick="PreviousWeek" disabled="@(_selectedWeek <= 1)">
+            <span class="arrow">‹</span> PREV
+        </button>
+        <div class="week-display">
+            WEEK @_selectedWeek - @GetWeekDateRange()
+        </div>
+        <button class="nav-btn" @onclick="NextWeek" disabled="@(_selectedWeek >= 22)">
+            NEXT <span class="arrow">›</span>
+        </button>
+    </div>
+
+    <!-- Pick Status Summary -->
+    @if (_pickStatus != null)
+    {
+        <div class="pick-status">
+            <div class="status-text">
+                YOUR PICKS: @_pickStatus.PicksMade/@_pickStatus.TotalGames COMPLETE
+            </div>
+            <div class="progress-bar">
+                <div class="progress" style="width: @((_pickStatus.PicksMade * 100) / Math.Max(1, _pickStatus.TotalGames))%"></div>
+            </div>
+            @if (_pickStatus.GamesNeedingPicks.Any())
+            {
+                <div class="warning @(IsNextDeadlineSoon() ? "urgent" : "")">
+                    ⚠️ @_pickStatus.GamesNeedingPicks.Count GAMES NEED PICKS
+                    @if (_nextDeadline.HasValue)
+                    {
+                        <span>- NEXT DEADLINE: @FormatTimeRemaining(_nextDeadline.Value)</span>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Games Grid -->
+    @if (_games == null)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!_games.Any())
+    {
+        <div class="alert alert-info">
+            No games found for Week @_selectedWeek.
+        </div>
+    }
+    else
+    {
+        <div class="games-grid">
+            @foreach (var game in _games)
+            {
+                <div class="game-card @(IsGameLocked(game) ? "locked" : "")">
+                    <div class="game-header">
+                        @GetGameDayText(game.GameTime)
+                        <div class="game-time">@TimeZoneHelper.FormatGameTime(game.GameTime)</div>
+                    </div>
+                    <div class="teams-container">
+                        <div class="team">
+                            <img src="@game.HomeTeam.IconUrl" alt="@game.HomeTeam.Name" class="team-logo" />
+                            <div class="team-name">@game.HomeTeam.Name</div>
+                        </div>
+                        <div class="vs">AT</div>
+                        <div class="team">
+                            <img src="@game.AwayTeam.IconUrl" alt="@game.AwayTeam.Name" class="team-logo" />
+                            <div class="team-name">@game.AwayTeam.Name</div>
+                        </div>
+                    </div>
+                    @if (!IsGameLocked(game))
+                    {
+                        <div class="pick-buttons">
+                            <button class="team-button @GetPickButtonClass(game.HomeTeam.Id)"
+                                    @onclick="() => MakePick(game.Id, game.HomeTeam.Id)"
+                                    style="background-color: @GetTeamButtonColor(game.HomeTeam.PrimaryColor, game.HomeTeam.Id)">
+                                @game.HomeTeam.Name
+                            </button>
+                            <button class="team-button @GetPickButtonClass(game.AwayTeam.Id)"
+                                    @onclick="() => MakePick(game.Id, game.AwayTeam.Id)"
+                                    style="background-color: @GetTeamButtonColor(game.AwayTeam.PrimaryColor, game.AwayTeam.Id)">
+                                @game.AwayTeam.Name
+                            </button>
+                        </div>
+                        <div class="deadline-text">
+                            Pick Deadline: @TimeZoneHelper.FormatGameTime(game.PickDeadline)
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="locked-status @GetPickResultClass(game)">
+                            @if (game.IsCompleted)
+                            {
+                                <div class="score">
+                                    @game.HomeTeamScore - @game.AwayTeamScore
+                                    <div class="quarter">FINAL</div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="game-status">GAME IN PROGRESS</div>
+                            }
+                            @if (_userPicks.Any(p => p.GameId == game.Id))
+                            {
+                                var pick = _userPicks.First(p => p.GameId == game.Id);
+                                <div class="user-pick">
+                                    Your Pick: @GetTeamName(pick.SelectedTeamId)
+                                    @if (game.IsCompleted)
+                                    {
+                                        <div class="pick-result @(IsPickCorrect(game, pick) ? "correct" : "incorrect")">
+                                            @(IsPickCorrect(game, pick) ? "✓ Correct!" : "✗ Incorrect")
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    :root {
+        --nfl-navy: #013369;
+        --nfl-red: #D50A0A;
+        --nfl-white: #FFFFFF;
+        --card-radius: 8px;
+        --card-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        --card-padding: 16px;
+    }
+
+    .week-nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: var(--nfl-navy);
+        color: var(--nfl-white);
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .nav-btn {
+        background: none;
+        border: none;
+        color: var(--nfl-white);
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+    }
+
+    .nav-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .arrow {
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
+    .pick-status {
+        background-color: white;
+        padding: var(--card-padding);
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        margin-bottom: 1rem;
+    }
+
+    .progress-bar {
+        background-color: #eee;
+        height: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+
+    .progress {
+        background: linear-gradient(90deg, #ffd700 0%, #4CAF50 100%);
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+
+    .warning {
+        color: var(--nfl-red);
+    }
+
+    .warning.urgent {
+        animation: pulse 2s infinite;
+    }
+
+    .games-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    .game-card {
+        background-color: white;
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        padding: var(--card-padding);
+    }
+
+    .game-card.locked {
+        background-color: #f8f9fa;
+    }
+
+    .game-header {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .teams-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .team {
+        text-align: center;
+    }
+
+    .team-logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+    }
+
+    .team-name {
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+
+    .vs {
+        font-weight: bold;
+    }
+
+    .pick-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .team-button {
+        flex: 1;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 4px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .team-button:hover {
+        transform: scale(1.02);
+    }
+
+    .team-button.selected {
+        transform: scale(1.05);
+    }
+
+    .deadline-text {
+        text-align: center;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .locked-status {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .locked-status.correct-pick {
+        background-color: rgba(76, 175, 80, 0.1);
+        border: 1px solid #4CAF50;
+    }
+
+    .locked-status.incorrect-pick {
+        background-color: rgba(244, 67, 54, 0.1);
+        border: 1px solid #F44336;
+    }
+
+    .pick-result {
+        margin-top: 0.5rem;
+        font-weight: bold;
+    }
+
+    .pick-result.correct {
+        color: #4CAF50;
+    }
+
+    .pick-result.incorrect {
+        color: #F44336;
+    }
+
+    @@keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
+    @@media (min-width: 768px) {
+        .games-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (min-width: 1024px) {
+        .games-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+</style>
+
+@code {
+    private int _selectedWeek;
+    private IEnumerable<Picus.Api.Models.DTOs.GameDTO>? _games;
+    private PicksStatusDto? _pickStatus;
+    private IEnumerable<VisiblePickDto> _userPicks = new List<VisiblePickDto>();
+    private DateTime? _nextDeadline;
+
+    // For testing purposes
+    [Parameter]
+    public DateTimeOffset? CurrentDateOverride { get; set; }
+
+    private DateTimeOffset GetCurrentDate()
+    {
+        return CurrentDateOverride ?? DateTimeOffset.Parse("2025-01-15T08:26:33Z");
+    }
+
+    private int GetRegularSeasonWeek(DateTimeOffset date)
+    {
+        return date.Day <= 7 ? 1 : 
+               date.Day <= 14 ? 2 : 
+               date.Day <= 21 ? 3 : 
+               date.Day <= 28 ? 4 : 5;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentDate = GetCurrentDate();
+        
+        _selectedWeek = currentDate.Month switch
+        {
+            1 when currentDate.Day < 19 => 19,  // Wild Card
+            1 when currentDate.Day < 26 => 20,  // Divisional
+            1 => 21,  // Conference Championships
+            2 when currentDate.Day < 15 => 22,  // Super Bowl
+            9 or 10 or 11 or 12 => GetRegularSeasonWeek(currentDate),  // Regular season
+            _ => 1  // Default to week 1
+        };
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var gamesTask = GamesService.GetGamesByWeekAndSeasonAsync(_selectedWeek, 2024);
+            var pickStatusTask = PicksService.GetPickStatusAsync(_selectedWeek, 2024);
+            var userPicksTask = PicksService.GetMyPicksForWeekAsync(_selectedWeek, 2024);
+
+            await Task.WhenAll(gamesTask, pickStatusTask, userPicksTask);
+
+            _games = await gamesTask;
+            _pickStatus = await pickStatusTask;
+            var result = await userPicksTask;
+            _userPicks = result.picks;
+
+            UpdateNextDeadline();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading picks data");
+        }
+    }
+
+    private void UpdateNextDeadline()
+    {
+        if (_games == null) return;
+        
+        _nextDeadline = _games
+            .Where(g => !IsGameLocked(g))
+            .OrderBy(g => g.PickDeadline)
+            .FirstOrDefault()?.PickDeadline;
+    }
+
+    private async Task PreviousWeek()
+    {
+        if (_selectedWeek > 1)
+        {
+            _selectedWeek--;
+            await LoadData();
+        }
+    }
+
+    private async Task NextWeek()
+    {
+        if (_selectedWeek < 22)
+        {
+            _selectedWeek++;
+            await LoadData();
+        }
+    }
+
+    private string GetWeekDateRange()
+    {
+        if (_games == null || !_games.Any()) return string.Empty;
+        
+        var firstGame = _games.OrderBy(g => g.GameTime).First();
+        var lastGame = _games.OrderBy(g => g.GameTime).Last();
+        
+        return $"{firstGame.GameTime.ToLocalTime():MMMM dd}-{lastGame.GameTime.ToLocalTime():dd}, {lastGame.GameTime.Year}";
+    }
+
+    private string GetGameDayText(DateTime gameTime)
+    {
+        return gameTime.ToLocalTime().ToString("dddd").ToUpper();
+    }
+
+    private bool IsGameLocked(Picus.Api.Models.DTOs.GameDTO game)
+    {
+        return DateTime.UtcNow > game.PickDeadline;
+    }
+
+    private bool IsNextDeadlineSoon()
+    {
+        if (!_nextDeadline.HasValue) return false;
+        var timeUntilDeadline = _nextDeadline.Value - DateTime.UtcNow;
+        return timeUntilDeadline.TotalHours <= 3;
+    }
+
+    private string FormatTimeRemaining(DateTime deadline)
+    {
+        var timeSpan = deadline - DateTime.UtcNow;
+        if (timeSpan.TotalHours >= 1)
+        {
+            return $"{Math.Floor(timeSpan.TotalHours)}HR {timeSpan.Minutes}MIN";
+        }
+        return $"{timeSpan.Minutes}MIN";
+    }
+
+    private string GetPickButtonClass(int teamId)
+    {
+        var pick = _userPicks.FirstOrDefault(p => p.SelectedTeamId == teamId);
+        return pick != null ? "selected" : "";
+    }
+
+    private string GetTeamButtonColor(string teamColor, int teamId)
+    {
+        var pick = _userPicks.FirstOrDefault(p => p.SelectedTeamId == teamId);
+        if (pick != null)
+        {
+            return teamColor;
+        }
+        return $"{teamColor}26"; // 15% opacity
+    }
+
+    private string GetTeamName(int? teamId)
+    {
+        if (!teamId.HasValue || _games == null) return string.Empty;
+        
+        var game = _games.FirstOrDefault(g => g.HomeTeam.Id == teamId || g.AwayTeam.Id == teamId);
+        if (game == null) return string.Empty;
+        
+        return game.HomeTeam.Id == teamId ? game.HomeTeam.Name : game.AwayTeam.Name;
+    }
+
+    private async Task MakePick(int gameId, int teamId)
+    {
+        try
+        {
+            await PicksService.SubmitPickAsync(new SubmitPickDto
+            {
+                GameId = gameId,
+                SelectedTeamId = teamId
+            });
+            
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error submitting pick");
+            await JSRuntime.InvokeVoidAsync("alert", "Failed to submit pick. Please try again.");
+        }
+    }
+
+    private string GetPickResultClass(GameDTO game)
+    {
+        if (!game.IsCompleted) return "";
+        var pick = _userPicks.FirstOrDefault(p => p.GameId == game.Id);
+        if (pick == null) return "";
+        
+        return IsPickCorrect(game, pick) ? "correct-pick" : "incorrect-pick";
+    }
+
+    private bool IsPickCorrect(GameDTO game, VisiblePickDto pick)
+    {
+        if (!game.IsCompleted) return false;
+        
+        var winningTeamId = game.HomeTeamScore > game.AwayTeamScore 
+            ? game.HomeTeam.Id 
+            : game.AwayTeam.Id;
+            
+        return pick.SelectedTeamId == winningTeamId;
+    }
+} 
