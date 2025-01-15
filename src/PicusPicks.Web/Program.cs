@@ -97,6 +97,8 @@ builder.Services.AddHttpClient<IPicksService, PicksService>(client =>
     ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 });
 
+builder.Services.AddScoped<ILeagueTableService, LeagueTableService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
