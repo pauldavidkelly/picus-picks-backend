@@ -98,8 +98,8 @@
                                 else
                                 {
                                     <div class="game-time">
-                                        <div>@game.GameTime.ToLocalTime().ToString("MMM d, yyyy")</div>
-                                        <div class="h4">@game.GameTime.ToLocalTime().ToString("h:mm tt")</div>
+                                        <div>@TimeZoneHelper.FormatGameDate(game.GameTime)</div>
+                                        <div class="h4">@TimeZoneHelper.FormatGameTime(game.GameTime)</div>
                                         <div class="stadium text-muted">@game.Location</div>
                                     </div>
                                 }

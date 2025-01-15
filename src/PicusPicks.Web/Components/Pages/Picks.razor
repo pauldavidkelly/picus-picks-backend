@@ -3,6 +3,7 @@
 @using PicusPicks.Web.Services
 @using Microsoft.AspNetCore.Components.Web
 @using Picus.Api.Models.DTOs
+@using PicusPicks.Web.Utilities
 @rendermode InteractiveServer
 @inject IPicksService PicksService
 @inject IGamesService GamesService
@@ -72,7 +73,7 @@
                 <div class="game-card @(IsGameLocked(game) ? "locked" : "")">
                     <div class="game-header">
                         @GetGameDayText(game.GameTime)
-                        <div class="game-time">@game.GameTime.ToLocalTime().ToString("h:mm tt ET")</div>
+                        <div class="game-time">@TimeZoneHelper.FormatGameTime(game.GameTime)</div>
                     </div>
                     <div class="teams-container">
                         <div class="team">
@@ -100,7 +101,7 @@
                             </button>
                         </div>
                         <div class="deadline-text">
-                            Pick Deadline: @game.PickDeadline.ToLocalTime().ToString("h:mm tt ET")
+                            Pick Deadline: @TimeZoneHelper.FormatGameTime(game.PickDeadline)
                         </div>
                     }
                     else
