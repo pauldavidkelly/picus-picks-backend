@@ -121,4 +121,27 @@ public class PicksController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while retrieving pick status" });
         }
     }
+
+    /// <summary>
+    /// Get all picks for a specific week and season
+    /// </summary>
+    [HttpGet("week/{week}/season/{season}")]
+    public async Task<IActionResult> GetAllPicksForWeek(int week, int season)
+    {
+        try
+        {
+            var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException("User ID not found");
+            var user = await _userService.GetUserByAuth0IdAsync(auth0Id) ?? throw new InvalidOperationException("User not found");
+            
+            var picks = await _pickService.GetAllPicksByWeekAsync(week, season);
+            var visiblePicks = await _pickService.ApplyPickVisibilityRulesAsync(picks);
+            
+            return Ok(visiblePicks);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all picks");
+            return StatusCode(500, new { message = "An error occurred while retrieving picks" });
+        }
+    }
 }

@@ -124,4 +124,31 @@ public class PicksService : IPicksService
             throw;
         }
     }
+
+    public async Task<IEnumerable<VisiblePickDto>> GetAllPicksForWeekAsync(int week, int season)
+    {
+        try
+        {
+            var accessToken = await _httpContextAccessor.HttpContext!.GetTokenAsync("access_token");
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                throw new InvalidOperationException("No access token available");
+            }
+
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            var picks = await _httpClient.GetFromJsonAsync<IEnumerable<VisiblePickDto>>($"api/picks/week/{week}/season/{season}", _jsonOptions);
+            if (picks == null)
+            {
+                throw new InvalidOperationException("Failed to get picks");
+            }
+            return picks;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting all picks for week {Week}", week);
+            throw;
+        }
+    }
 } 

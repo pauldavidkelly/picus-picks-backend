@@ -1,0 +1,349 @@
+@using Picus.Api.Models.DTOs
+@using PicusPicks.Web.Helpers
+@inject IPicksService PicksService
+@inject IGamesService GamesService
+@inject ILogger<UsersPicksGrid> Logger
+
+<div class="users-picks-grid">
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (_games == null || !_games.Any())
+    {
+        <div class="alert alert-info">
+            No games found for Week @Week.
+        </div>
+    }
+    else if (_allPicks == null)
+    {
+        <div class="alert alert-warning">
+            Error loading picks data. Please try again.
+        </div>
+    }
+    else
+    {
+        <div class="grid-container">
+            <div class="grid-header">
+                <!-- Empty cell for game info column -->
+                <div class="header-cell game-info-header"></div>
+                
+                <!-- User columns -->
+                @foreach (var userId in GetUniqueUserIds())
+                {
+                    <div class="header-cell user-header">
+                        <div class="user-name">@GetUserName(userId)</div>
+                        <div class="user-score">@GetUserScore(userId) correct</div>
+                    </div>
+                }
+            </div>
+
+            <div class="grid-body">
+                @foreach (var game in _games)
+                {
+                    <div class="grid-row @(IsGameLocked(game) ? "locked" : "")">
+                        <!-- Game info cell -->
+                        <div class="game-info-cell">
+                            <div class="game-teams">
+                                <div class="team">
+                                    <img src="@game.AwayTeam.IconUrl" alt="@game.AwayTeam.Name" class="team-logo" />
+                                    @if (game.IsCompleted && game.WinningTeam?.Id == game.AwayTeam.Id)
+                                    {
+                                        <span class="winner-indicator">✓</span>
+                                    }
+                                </div>
+                                <div class="at">at</div>
+                                <div class="team">
+                                    <img src="@game.HomeTeam.IconUrl" alt="@game.HomeTeam.Name" class="team-logo" />
+                                    @if (game.IsCompleted && game.WinningTeam?.Id == game.HomeTeam.Id)
+                                    {
+                                        <span class="winner-indicator">✓</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User pick cells -->
+                        @foreach (var userId in GetUniqueUserIds())
+                        {
+                            var pick = GetUserPickForGame(userId, game.Id);
+                            <div class="pick-cell @GetPickCellClass(pick, game)">
+                                @if (IsGameLocked(game) && pick?.SelectedTeamId != null)
+                                {
+                                    var team = GetTeamById(game, pick.SelectedTeamId.Value);
+                                    if (team != null)
+                                    {
+                                        <img src="@team.IconUrl" alt="@team.Name" class="pick-logo" />
+                                    }
+                                }
+                                else if (!IsGameLocked(game) && pick != null)
+                                {
+                                    <div class="pick-made">✓</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .users-picks-grid {
+        margin-top: 1rem;
+    }
+
+    .grid-container {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid var(--nfl-navy);
+        border-radius: var(--card-radius);
+    }
+
+    .grid-header {
+        display: flex;
+        background-color: var(--nfl-navy);
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .header-cell {
+        padding: 1rem;
+        flex: 1;
+        text-align: center;
+        min-width: 120px;
+        white-space: nowrap;
+    }
+
+    .game-info-header {
+        min-width: 200px;
+        flex: 0 0 200px;
+    }
+
+    .user-header {
+        border-left: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .user-name {
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+
+    .user-score {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .grid-body {
+        background-color: white;
+    }
+
+    .grid-row {
+        display: flex;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s ease;
+    }
+
+    .grid-row:hover {
+        background-color: #f8f9fa;
+    }
+
+    .grid-row.locked {
+        background-color: #f8f9fa;
+    }
+
+    .game-info-cell {
+        padding: 0.75rem;
+        flex: 0 0 200px;
+        min-width: 200px;
+        display: flex;
+        align-items: center;
+    }
+
+    .game-teams {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.25rem;
+        width: 100%;
+    }
+
+    .team {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .team-logo {
+        width: 28px;
+        height: 28px;
+    }
+
+    .pick-logo {
+        width: 32px;
+        height: 32px;
+        transition: transform 0.2s ease;
+    }
+
+    .pick-cell {
+        flex: 1;
+        min-width: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        border-left: 1px solid #eee;
+    }
+
+    .pick-cell.correct {
+        background-color: rgba(76, 175, 80, 0.1);
+    }
+
+    .pick-cell.incorrect {
+        background-color: rgba(244, 67, 54, 0.1);
+    }
+
+    .pick-made {
+        color: #4CAF50;
+        font-size: 1.2rem;
+    }
+
+    .winner-indicator {
+        color: #4CAF50;
+        font-weight: bold;
+        margin-left: 0.25rem;
+    }
+
+    .at {
+        color: #666;
+        font-size: 0.8rem;
+        padding: 0 0.25rem;
+        flex-shrink: 0;
+    }
+
+    @@media (max-width: 768px) {
+        .grid-container {
+            font-size: 0.9rem;
+        }
+
+        .game-info-header,
+        .game-info-cell {
+            min-width: 150px;
+            flex: 0 0 150px;
+            padding: 0.5rem;
+        }
+
+        .header-cell,
+        .pick-cell {
+            min-width: 100px;
+        }
+
+        .team-logo {
+            width: 24px;
+            height: 24px;
+        }
+
+        .at {
+            font-size: 0.75rem;
+            padding: 0 0.15rem;
+        }
+
+        .winner-indicator {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public int Week { get; set; }
+    [Parameter] public int Season { get; set; }
+
+    private bool _isLoading = true;
+    private IEnumerable<GameDTO>? _games;
+    private IEnumerable<VisiblePickDto>? _allPicks;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            _isLoading = true;
+            var gamesTask = GamesService.GetGamesByWeekAndSeasonAsync(Week, Season);
+            var picksTask = PicksService.GetAllPicksForWeekAsync(Week, Season);
+
+            await Task.WhenAll(gamesTask, picksTask);
+
+            _games = await gamesTask;
+            _allPicks = await picksTask;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading grid data");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private IEnumerable<int> GetUniqueUserIds()
+    {
+        return _allPicks?
+            .Select(p => p.UserId)
+            .Distinct()
+            .OrderBy(id => id)
+            ?? Enumerable.Empty<int>();
+    }
+
+    private string GetUserName(int userId)
+    {
+        // TODO: Get actual user names from a user service
+        return $"User {userId}";
+    }
+
+    private int GetUserScore(int userId)
+    {
+        if (_games == null || _allPicks == null) return 0;
+
+        return _games.Count(game =>
+        {
+            var pick = GetUserPickForGame(userId, game.Id);
+            return game.IsCompleted && 
+                   pick?.SelectedTeamId != null && 
+                   pick.SelectedTeamId == game.WinningTeam?.Id;
+        });
+    }
+
+    private VisiblePickDto? GetUserPickForGame(int userId, int gameId)
+    {
+        return _allPicks?.FirstOrDefault(p => p.UserId == userId && p.GameId == gameId);
+    }
+
+    private bool IsGameLocked(GameDTO game)
+    {
+        return DateTime.UtcNow > game.PickDeadline;
+    }
+
+    private string GetPickCellClass(VisiblePickDto? pick, GameDTO game)
+    {
+        if (!game.IsCompleted || pick?.SelectedTeamId == null) return "";
+        return pick.SelectedTeamId == game.WinningTeam?.Id ? "correct" : "incorrect";
+    }
+
+    private TeamDTO? GetTeamById(GameDTO game, int teamId)
+    {
+        return game.HomeTeam.Id == teamId ? game.HomeTeam : 
+               game.AwayTeam.Id == teamId ? game.AwayTeam : null;
+    }
+}
