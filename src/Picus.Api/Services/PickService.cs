@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Picus.Api.Data;
 using Picus.Api.Models;
 using Picus.Api.Models.DTOs;
@@ -9,11 +10,13 @@ public class PickService : IPickService
 {
     private readonly PicusDbContext _context;
     private readonly ILogger<PickService> _logger;
+    private readonly IConfiguration _configuration;
 
-    public PickService(PicusDbContext context, ILogger<PickService> logger)
+    public PickService(PicusDbContext context, ILogger<PickService> logger, IConfiguration configuration)
     {
         _context = context;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<Pick> SubmitPickAsync(int userId, SubmitPickDto pickDto)
@@ -28,7 +31,9 @@ public class PickService : IPickService
             throw new ArgumentException($"Game with ID {pickDto.GameId} not found");
         }
 
-        if (DateTime.UtcNow > game.PickDeadline)
+        // Check if deadline bypass is enabled
+        var bypassEnabled = _configuration.GetSection("FeatureFlags:BypassPickDeadlines").Value?.ToLower() == "true";
+        if (!bypassEnabled && DateTime.UtcNow > game.PickDeadline)
         {
             _logger.LogWarning($"Pick deadline has passed for game {game.Id}");
             throw new InvalidOperationException($"Pick deadline has passed for game {game.Id}");
