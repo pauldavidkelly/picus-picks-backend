@@ -10,6 +10,7 @@ using PicusPicks.Web.Services;
 using PicusPicks.Web.Tests.Helpers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace PicusPicks.Web.Tests.Components.Pages;
 
@@ -19,6 +20,8 @@ public class PicksTests : TestContext
     private readonly Mock<IGamesService> _mockGamesService;
     private readonly Mock<ILogger<Picks>> _mockLogger;
     private readonly Mock<IJSRuntime> _mockJsRuntime;
+    private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<IConfigurationSection> _mockFeatureFlagsSection;
 
     public PicksTests()
     {
@@ -26,11 +29,20 @@ public class PicksTests : TestContext
         _mockGamesService = new Mock<IGamesService>();
         _mockLogger = new Mock<ILogger<Picks>>();
         _mockJsRuntime = new Mock<IJSRuntime>();
+        _mockConfiguration = new Mock<IConfiguration>();
+        _mockFeatureFlagsSection = new Mock<IConfigurationSection>();
+
+        // Setup configuration sections
+        _mockFeatureFlagsSection.Setup(s => s.Value).Returns("false");
+        _mockConfiguration
+            .Setup(c => c.GetSection("FeatureFlags:BypassPickDeadlines"))
+            .Returns(_mockFeatureFlagsSection.Object);
 
         Services.AddScoped<IPicksService>(_ => _mockPicksService.Object);
         Services.AddScoped<IGamesService>(_ => _mockGamesService.Object);
         Services.AddScoped<ILogger<Picks>>(_ => _mockLogger.Object);
         Services.AddScoped<IJSRuntime>(_ => _mockJsRuntime.Object);
+        Services.AddScoped<IConfiguration>(_ => _mockConfiguration.Object);
     }
 
     [Fact]
@@ -224,5 +236,37 @@ public class PicksTests : TestContext
         _mockGamesService.Verify(
             x => x.GetGamesByWeekAndSeasonAsync(20, 2024),
             Times.Once);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void IsGameLocked_RespectsDeadlineBypass(bool bypassEnabled)
+    {
+        // Arrange
+        var pastDeadlineGame = TestData.GetTestGames().First();
+        pastDeadlineGame.PickDeadline = DateTime.UtcNow.AddHours(-1); // Game deadline was 1 hour ago
+
+        _mockFeatureFlagsSection.Setup(s => s.Value).Returns(bypassEnabled.ToString().ToLower());
+
+        _mockGamesService
+            .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(new[] { pastDeadlineGame });
+
+        _mockPicksService
+            .Setup(x => x.GetMyPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync((new List<VisiblePickDto>(), new PicksStatusDto()));
+
+        _mockPicksService
+            .Setup(x => x.GetPickStatusAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(new PicksStatusDto());
+
+        // Act
+        var cut = RenderComponent<Picks>();
+
+        // Assert
+        var gameCard = cut.Find(".game-card");
+        var isLocked = gameCard.ClassList.Contains("locked");
+        Assert.Equal(!bypassEnabled, isLocked); // Should be locked only when bypass is disabled
     }
 } 

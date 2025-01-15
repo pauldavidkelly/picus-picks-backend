@@ -4,11 +4,13 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Picus.Api.Models.DTOs
 @using PicusPicks.Web.Utilities
+@using Microsoft.Extensions.Configuration
 @rendermode InteractiveServer
 @inject IPicksService PicksService
 @inject IGamesService GamesService
 @inject ILogger<Picks> Logger
 @inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
 @attribute [Authorize]
 
 <PageTitle>Picks</PageTitle>
@@ -31,6 +33,12 @@
     @if (_pickStatus != null)
     {
         <div class="pick-status">
+            @if (bool.TryParse(Configuration.GetSection("FeatureFlags:BypassPickDeadlines").Value, out bool bypassEnabled) && bypassEnabled)
+            {
+                <div class="bypass-warning">
+                    ⚠️ DEADLINE CHECKS DISABLED - Historical Pick Entry Mode
+                </div>
+            }
             <div class="status-text">
                 YOUR PICKS: @_pickStatus.PicksMade/@_pickStatus.TotalGames COMPLETE
             </div>
@@ -208,6 +216,17 @@
 
     .warning.urgent {
         animation: pulse 2s infinite;
+    }
+
+    .bypass-warning {
+        background-color: rgba(213, 10, 10, 0.1);
+        border: 1px solid var(--nfl-red);
+        color: var(--nfl-red);
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+        text-align: center;
+        font-weight: bold;
     }
 
     .games-grid {
@@ -445,6 +464,12 @@
 
     private bool IsGameLocked(Picus.Api.Models.DTOs.GameDTO game)
     {
+        // Check if deadline bypass is enabled
+        var bypassEnabled = bool.TryParse(Configuration.GetSection("FeatureFlags:BypassPickDeadlines").Value, out bool bypass) && bypass;
+        if (bypassEnabled)
+        {
+            return false;
+        }
         return DateTime.UtcNow > game.PickDeadline;
     }
 
