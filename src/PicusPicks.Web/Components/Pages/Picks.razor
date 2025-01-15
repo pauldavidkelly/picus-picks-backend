@@ -1,4 +1,5 @@
 @page "/picks"
+@page "/picks/{Tab}"
 @using Microsoft.AspNetCore.Authorization
 @using PicusPicks.Web.Services
 @using Microsoft.AspNetCore.Components.Web
@@ -11,6 +12,7 @@
 @inject ILogger<Picks> Logger
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Configuration
+@inject NavigationManager NavigationManager
 @attribute [Authorize]
 
 <PageTitle>Picks</PageTitle>
@@ -29,124 +31,145 @@
         </button>
     </div>
 
-    <!-- Pick Status Summary -->
-    @if (_pickStatus != null)
+    <!-- Tab Navigation -->
+    <div class="tabs">
+        <button class="tab-button @(_activeTab == "my-picks" ? "active" : "")" @onclick="@(async () => await SwitchTab("my-picks"))">
+            My Picks
+        </button>
+        <button class="tab-button @(_activeTab == "all-picks" ? "active" : "")" @onclick="@(async () => await SwitchTab("all-picks"))">
+            All Picks
+        </button>
+    </div>
+
+    @if (_activeTab == "my-picks")
     {
-        <div class="pick-status">
-            @if (bool.TryParse(Configuration.GetSection("FeatureFlags:BypassPickDeadlines").Value, out bool bypassEnabled) && bypassEnabled)
-            {
-                <div class="bypass-warning">
-                    ⚠️ DEADLINE CHECKS DISABLED - Historical Pick Entry Mode
-                </div>
-            }
-            <div class="status-text">
-                YOUR PICKS: @_pickStatus.PicksMade/@_pickStatus.TotalGames COMPLETE
-                @if (_games != null)
+        <!-- My Picks Tab Content -->
+        <!-- Pick Status Summary -->
+        @if (_pickStatus != null)
+        {
+            <div class="pick-status">
+                @if (bool.TryParse(Configuration.GetSection("FeatureFlags:BypassPickDeadlines").Value, out bool bypassEnabled) && bypassEnabled)
                 {
-                    <span>(@CorrectPicksCount CORRECT)</span>
+                    <div class="bypass-warning">
+                        ⚠️ DEADLINE CHECKS DISABLED - Historical Pick Entry Mode
+                    </div>
                 }
-            </div>
-            <div class="progress-bar">
-                <div class="progress" style="width: @((_pickStatus.PicksMade * 100) / Math.Max(1, _pickStatus.TotalGames))%"></div>
-            </div>
-            @if (_pickStatus.GamesNeedingPicks.Any())
-            {
-                <div class="warning @(IsNextDeadlineSoon() ? "urgent" : "")">
-                    ⚠️ @_pickStatus.GamesNeedingPicks.Count GAMES NEED PICKS
-                    @if (_nextDeadline.HasValue)
+                <div class="status-text">
+                    YOUR PICKS: @_pickStatus.PicksMade/@_pickStatus.TotalGames COMPLETE
+                    @if (_games != null)
                     {
-                        <span>- NEXT DEADLINE: @FormatTimeRemaining(_nextDeadline.Value)</span>
+                        <span>(@CorrectPicksCount CORRECT)</span>
                     }
                 </div>
-            }
-        </div>
-    }
-
-    <!-- Games Grid -->
-    @if (_games == null)
-    {
-        <div class="d-flex justify-content-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
+                <div class="progress-bar">
+                    <div class="progress" style="width: @((_pickStatus.PicksMade * 100) / Math.Max(1, _pickStatus.TotalGames))%"></div>
+                </div>
+                @if (_pickStatus.GamesNeedingPicks.Any())
+                {
+                    <div class="warning @(IsNextDeadlineSoon() ? "urgent" : "")">
+                        ⚠️ @_pickStatus.GamesNeedingPicks.Count GAMES NEED PICKS
+                        @if (_nextDeadline.HasValue)
+                        {
+                            <span>- NEXT DEADLINE: @FormatTimeRemaining(_nextDeadline.Value)</span>
+                        }
+                    </div>
+                }
             </div>
-        </div>
-    }
-    else if (!_games.Any())
-    {
-        <div class="alert alert-info">
-            No games found for Week @_selectedWeek.
-        </div>
+        }
+
+        <!-- Games Grid -->
+        @if (_games == null)
+        {
+            <div class="d-flex justify-content-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else if (!_games.Any())
+        {
+            <div class="alert alert-info">
+                No games found for Week @_selectedWeek.
+            </div>
+        }
+        else
+        {
+            <div class="games-grid">
+                @foreach (var game in _games)
+                {
+                    <div class="game-card @(IsGameLocked(game) ? "locked" : "")">
+                        <div class="game-header">
+                            @GetGameDayText(game.GameTime)
+                            <div class="game-time">@TimeZoneHelper.FormatGameTime(game.GameTime)</div>
+                        </div>
+                        <div class="teams-container">
+                            <div class="team">
+                                <img src="@game.AwayTeam.IconUrl" alt="@game.AwayTeam.Name" class="team-logo" />
+                                <div class="team-name">@game.AwayTeam.Name</div>
+                            </div>
+                            <div class="vs">AT</div>
+                            <div class="team">
+                                <img src="@game.HomeTeam.IconUrl" alt="@game.HomeTeam.Name" class="team-logo" />
+                                <div class="team-name">@game.HomeTeam.Name</div>
+                            </div>
+                        </div>
+                        @if (!IsGameLocked(game))
+                        {
+                            <div class="pick-buttons">
+                                <button class="team-button @GetPickButtonClass(game.AwayTeam.Id)"
+                                        @onclick="() => MakePick(game.Id, game.AwayTeam.Id)"
+                                        style="background-color: @GetTeamButtonColor(game.AwayTeam.PrimaryColor, game.AwayTeam.Id)">
+                                    @game.AwayTeam.Name
+                                </button>
+                                <button class="team-button @GetPickButtonClass(game.HomeTeam.Id)"
+                                        @onclick="() => MakePick(game.Id, game.HomeTeam.Id)"
+                                        style="background-color: @GetTeamButtonColor(game.HomeTeam.PrimaryColor, game.HomeTeam.Id)">
+                                    @game.HomeTeam.Name
+                                </button>
+                            </div>
+                            <div class="deadline-text">
+                                Pick Deadline: @TimeZoneHelper.FormatGameTime(game.PickDeadline)
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="locked-status @GetPickResultClass(game)">
+                                @if (game.IsCompleted)
+                                {
+                                    <div class="score">
+                                        @game.AwayTeamScore - @game.HomeTeamScore
+                                        <div class="quarter">FINAL</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="game-status">GAME IN PROGRESS</div>
+                                }
+                                @if (_userPicks.Any(p => p.GameId == game.Id))
+                                {
+                                    var pick = _userPicks.First(p => p.GameId == game.Id);
+                                    <div class="user-pick">
+                                        Your Pick: @GetTeamName(pick.SelectedTeamId)
+                                        @if (game.IsCompleted)
+                                        {
+                                            <div class="pick-result @(IsPickCorrect(game, pick) ? "correct" : "incorrect")">
+                                                @(IsPickCorrect(game, pick) ? "✓ Correct!" : "✗ Incorrect")
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
     }
     else
     {
-        <div class="games-grid">
-            @foreach (var game in _games)
-            {
-                <div class="game-card @(IsGameLocked(game) ? "locked" : "")">
-                    <div class="game-header">
-                        @GetGameDayText(game.GameTime)
-                        <div class="game-time">@TimeZoneHelper.FormatGameTime(game.GameTime)</div>
-                    </div>
-                    <div class="teams-container">
-                        <div class="team">
-                            <img src="@game.AwayTeam.IconUrl" alt="@game.AwayTeam.Name" class="team-logo" />
-                            <div class="team-name">@game.AwayTeam.Name</div>
-                        </div>
-                        <div class="vs">AT</div>
-                        <div class="team">
-                            <img src="@game.HomeTeam.IconUrl" alt="@game.HomeTeam.Name" class="team-logo" />
-                            <div class="team-name">@game.HomeTeam.Name</div>
-                        </div>
-                    </div>
-                    @if (!IsGameLocked(game))
-                    {
-                        <div class="pick-buttons">
-                            <button class="team-button @GetPickButtonClass(game.AwayTeam.Id)"
-                                    @onclick="() => MakePick(game.Id, game.AwayTeam.Id)"
-                                    style="background-color: @GetTeamButtonColor(game.AwayTeam.PrimaryColor, game.AwayTeam.Id)">
-                                @game.AwayTeam.Name
-                            </button>
-                            <button class="team-button @GetPickButtonClass(game.HomeTeam.Id)"
-                                    @onclick="() => MakePick(game.Id, game.HomeTeam.Id)"
-                                    style="background-color: @GetTeamButtonColor(game.HomeTeam.PrimaryColor, game.HomeTeam.Id)">
-                                @game.HomeTeam.Name
-                            </button>
-                        </div>
-                        <div class="deadline-text">
-                            Pick Deadline: @TimeZoneHelper.FormatGameTime(game.PickDeadline)
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="locked-status @GetPickResultClass(game)">
-                            @if (game.IsCompleted)
-                            {
-                                <div class="score">
-                                    @game.AwayTeamScore - @game.HomeTeamScore
-                                    <div class="quarter">FINAL</div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="game-status">GAME IN PROGRESS</div>
-                            }
-                            @if (_userPicks.Any(p => p.GameId == game.Id))
-                            {
-                                var pick = _userPicks.First(p => p.GameId == game.Id);
-                                <div class="user-pick">
-                                    Your Pick: @GetTeamName(pick.SelectedTeamId)
-                                    @if (game.IsCompleted)
-                                    {
-                                        <div class="pick-result @(IsPickCorrect(game, pick) ? "correct" : "incorrect")">
-                                            @(IsPickCorrect(game, pick) ? "✓ Correct!" : "✗ Incorrect")
-                                        </div>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-            }
+        <!-- All Picks Tab Content -->
+        <div class="all-picks-grid">
+            <UsersPicksGrid Week="@_selectedWeek" Season="2024" />
         </div>
     }
 </div>
@@ -357,9 +380,57 @@
             grid-template-columns: repeat(3, 1fr);
         }
     }
+
+    /* Tab Styles */
+    .tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid var(--nfl-navy);
+        padding: 0 1rem;
+    }
+
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: none;
+        color: var(--nfl-navy);
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .tab-button:hover {
+        color: var(--nfl-red);
+    }
+
+    .tab-button.active {
+        color: var(--nfl-red);
+    }
+
+    .tab-button.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--nfl-red);
+    }
+
+    /* All Picks Grid Styles */
+    .all-picks-grid {
+        padding: 1rem;
+        min-height: 200px;
+    }
 </style>
 
 @code {
+    [Parameter]
+    public string? Tab { get; set; }
+
+    private string _activeTab = "my-picks";
     private int _selectedWeek;
     private IEnumerable<Picus.Api.Models.DTOs.GameDTO>? _games;
     private PicksStatusDto? _pickStatus;
@@ -385,6 +456,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active tab from route parameter
+        _activeTab = string.IsNullOrEmpty(Tab) ? "my-picks" : Tab.ToLower();
+        
         var currentDate = GetCurrentDate();
         
         _selectedWeek = currentDate.Month switch
@@ -564,4 +638,11 @@
         var pick = _userPicks?.FirstOrDefault(p => p.GameId == game.Id);
         return game.IsCompleted && pick != null && pick.SelectedTeamId == game.WinningTeam?.Id;
     }) ?? 0;
-} 
+
+    private async Task SwitchTab(string tab)
+    {
+        _activeTab = tab;
+        NavigationManager.NavigateTo($"/picks/{tab}");
+        await LoadData();
+    }
+}
