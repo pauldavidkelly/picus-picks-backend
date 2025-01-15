@@ -336,14 +336,43 @@
 </style>
 
 @code {
-    private int _selectedWeek = 1;
+    private int _selectedWeek;
     private IEnumerable<Picus.Api.Models.DTOs.GameDTO>? _games;
     private PicksStatusDto? _pickStatus;
     private IEnumerable<VisiblePickDto> _userPicks = new List<VisiblePickDto>();
     private DateTime? _nextDeadline;
 
+    // For testing purposes
+    [Parameter]
+    public DateTimeOffset? CurrentDateOverride { get; set; }
+
+    private DateTimeOffset GetCurrentDate()
+    {
+        return CurrentDateOverride ?? DateTimeOffset.Parse("2025-01-15T08:26:33Z");
+    }
+
+    private int GetRegularSeasonWeek(DateTimeOffset date)
+    {
+        return date.Day <= 7 ? 1 : 
+               date.Day <= 14 ? 2 : 
+               date.Day <= 21 ? 3 : 
+               date.Day <= 28 ? 4 : 5;
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        var currentDate = GetCurrentDate();
+        
+        _selectedWeek = currentDate.Month switch
+        {
+            1 when currentDate.Day < 19 => 19,  // Wild Card
+            1 when currentDate.Day < 26 => 20,  // Divisional
+            1 => 21,  // Conference Championships
+            2 when currentDate.Day < 15 => 22,  // Super Bowl
+            9 or 10 or 11 or 12 => GetRegularSeasonWeek(currentDate),  // Regular season
+            _ => 1  // Default to week 1
+        };
+
         await LoadData();
     }
 
