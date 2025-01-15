@@ -180,11 +180,8 @@ public class PickService : IPickService
                 .Include(p => p.SelectedTeam)
                 .ToListAsync();
 
-            _logger.LogInformation("Found {Count} total picks", picks.Count);
-
             // Only consider picks for completed games
             var completedPicks = picks.Where(p => p.Game.IsCompleted).ToList();
-            _logger.LogInformation("Found {Count} picks for completed games", completedPicks.Count);
 
             // Group by user and calculate stats
             var stats = completedPicks
@@ -197,13 +194,6 @@ public class PickService : IPickService
                 })
                 .OrderByDescending(s => s.SuccessRate)
                 .ToList();
-
-            _logger.LogInformation("Calculated stats for {Count} users", stats.Count);
-            foreach (var stat in stats)
-            {
-                _logger.LogInformation("User {User}: {Correct}/{Total} = {Rate}%", 
-                    stat.DisplayName, stat.CorrectPicks, stat.TotalPicks, stat.SuccessRate);
-            }
 
             return stats;
         }

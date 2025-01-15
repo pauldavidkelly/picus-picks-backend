@@ -98,11 +98,11 @@ builder.Services.AddHttpClient<IPicksService, PicksService>(client =>
     ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 });
 
-builder.Services.AddHttpClient<ILeagueTableService, LeagueTableService>(client =>
+builder.Services.AddHttpClient<ILeagueTableService, LeagueTableService>((serviceProvider, client) =>
 {
     var baseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5172/";
     client.BaseAddress = new Uri(baseUrl);
-    builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>()
+    serviceProvider.GetRequiredService<ILogger<Program>>()
         .LogInformation("Configuring LeagueTableService with base URL: {BaseUrl}", baseUrl);
 }).ConfigureHttpClient(client =>
 {

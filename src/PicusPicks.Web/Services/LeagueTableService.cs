@@ -44,8 +44,6 @@ public class LeagueTableService : ILeagueTableService
                 _httpContextAccessor.HttpContext,
                 OpenIdConnectDefaults.AuthenticationScheme);
 
-            _logger.LogInformation("Auth result: {Success}", authResult.Succeeded);
-
             if (!authResult.Succeeded)
             {
                 _logger.LogWarning("No access token available for league table stats request");
@@ -53,7 +51,6 @@ public class LeagueTableService : ILeagueTableService
             }
 
             var accessToken = authResult.Properties?.GetTokenValue("access_token");
-            _logger.LogInformation("Got token: {HasToken}", !string.IsNullOrEmpty(accessToken));
 
             if (string.IsNullOrEmpty(accessToken))
             {
@@ -65,20 +62,15 @@ public class LeagueTableService : ILeagueTableService
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
             // Get all users' picks from the API
-            _logger.LogInformation("HttpClient BaseAddress: {BaseAddress}", _httpClient.BaseAddress);
             var response = await _httpClient.GetAsync("/api/picks/stats");
-            _logger.LogInformation("Response status: {Status}", response.StatusCode);
 
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("API request failed with status {Status}: {Error}", 
-                    response.StatusCode, error);
+                _logger.LogWarning("API request failed with status {Status}", response.StatusCode);
                 return Enumerable.Empty<LeagueTableStats>();
             }
 
             var content = await response.Content.ReadFromJsonAsync<IEnumerable<LeagueTableStats>>();
-            _logger.LogInformation("Got response: {HasResponse}", content != null);
             
             if (content == null)
             {
@@ -86,15 +78,7 @@ public class LeagueTableService : ILeagueTableService
                 return Enumerable.Empty<LeagueTableStats>();
             }
 
-            var stats = content.OrderByDescending(x => x.SuccessRate).ToList();
-            _logger.LogInformation("Got {Count} stats entries", stats.Count);
-            foreach (var stat in stats)
-            {
-                _logger.LogInformation("User {User}: {Correct}/{Total} = {Rate}%", 
-                    stat.DisplayName, stat.CorrectPicks, stat.TotalPicks, stat.SuccessRate);
-            }
-
-            return stats;
+            return content.OrderByDescending(x => x.SuccessRate);
         }
         catch (Exception ex)
         {

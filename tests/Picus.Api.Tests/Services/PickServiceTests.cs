@@ -294,4 +294,142 @@ public class PickServiceTests : TestBase
         Assert.False(result.IsComplete);
         Assert.Single(result.GamesNeedingPicks);
     }
+
+    [Fact]
+    public async Task GetLeagueTableStatsAsync_ReturnsCorrectStats()
+    {
+        // Arrange
+        var user1 = new User { Id = 1, DisplayName = "User1" };
+        var user2 = new User { Id = 2, DisplayName = "User2" };
+        Context.Users.AddRange(user1, user2);
+
+        var game1 = new Game
+        {
+            Id = 1,
+            HomeTeamId = 1,
+            AwayTeamId = 2,
+            WinningTeamId = 1,
+            IsCompleted = true
+        };
+        var game2 = new Game
+        {
+            Id = 2,
+            HomeTeamId = 1,
+            AwayTeamId = 2,
+            WinningTeamId = 2,
+            IsCompleted = true
+        };
+        var game3 = new Game
+        {
+            Id = 3,
+            HomeTeamId = 1,
+            AwayTeamId = 2,
+            IsCompleted = false
+        };
+        await SeedTestGame(game1);
+        await SeedTestGame(game2);
+        await SeedTestGame(game3);
+
+        // User1: 2/2 correct picks (100%)
+        var pick1 = new Pick
+        {
+            UserId = 1,
+            GameId = 1,
+            SelectedTeamId = 1 // Correct
+        };
+        var pick2 = new Pick
+        {
+            UserId = 1,
+            GameId = 2,
+            SelectedTeamId = 2 // Correct
+        };
+        var pick3 = new Pick
+        {
+            UserId = 1,
+            GameId = 3,
+            SelectedTeamId = 1 // Not counted (game not completed)
+        };
+
+        // User2: 1/2 correct picks (50%)
+        var pick4 = new Pick
+        {
+            UserId = 2,
+            GameId = 1,
+            SelectedTeamId = 1 // Correct
+        };
+        var pick5 = new Pick
+        {
+            UserId = 2,
+            GameId = 2,
+            SelectedTeamId = 1 // Incorrect
+        };
+
+        Context.Picks.AddRange(pick1, pick2, pick3, pick4, pick5);
+        await Context.SaveChangesAsync();
+
+        // Act
+        var result = (await _service.GetLeagueTableStatsAsync()).ToList();
+
+        // Assert
+        Assert.Equal(2, result.Count);
+
+        // User1 should be first with 100% success rate
+        Assert.Equal("User1", result[0].DisplayName);
+        Assert.Equal(2, result[0].CorrectPicks);
+        Assert.Equal(2, result[0].TotalPicks);
+        Assert.Equal(100m, result[0].SuccessRate);
+
+        // User2 should be second with 50% success rate
+        Assert.Equal("User2", result[1].DisplayName);
+        Assert.Equal(1, result[1].CorrectPicks);
+        Assert.Equal(2, result[1].TotalPicks);
+        Assert.Equal(50m, result[1].SuccessRate);
+    }
+
+    [Fact]
+    public async Task GetLeagueTableStatsAsync_HandlesNoCompletedGames()
+    {
+        // Arrange
+        var user = new User { Id = 1, DisplayName = "User1" };
+        Context.Users.Add(user);
+
+        var game = new Game
+        {
+            Id = 1,
+            HomeTeamId = 1,
+            AwayTeamId = 2,
+            IsCompleted = false
+        };
+        await SeedTestGame(game);
+
+        var pick = new Pick
+        {
+            UserId = 1,
+            GameId = 1,
+            SelectedTeamId = 1
+        };
+        Context.Picks.Add(pick);
+        await Context.SaveChangesAsync();
+
+        // Act
+        var result = await _service.GetLeagueTableStatsAsync();
+
+        // Assert
+        Assert.Single(result);
+        var stats = result.First();
+        Assert.Equal("User1", stats.DisplayName);
+        Assert.Equal(0, stats.CorrectPicks);
+        Assert.Equal(0, stats.TotalPicks);
+        Assert.Equal(0m, stats.SuccessRate);
+    }
+
+    [Fact]
+    public async Task GetLeagueTableStatsAsync_HandlesNoUsers()
+    {
+        // Act
+        var result = await _service.GetLeagueTableStatsAsync();
+
+        // Assert
+        Assert.Empty(result);
+    }
 }
