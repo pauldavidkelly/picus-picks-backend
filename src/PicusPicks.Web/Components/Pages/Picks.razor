@@ -41,6 +41,10 @@
             }
             <div class="status-text">
                 YOUR PICKS: @_pickStatus.PicksMade/@_pickStatus.TotalGames COMPLETE
+                @if (_games != null)
+                {
+                    <span>(@CorrectPicksCount CORRECT)</span>
+                }
             </div>
             <div class="progress-bar">
                 <div class="progress" style="width: @((_pickStatus.PicksMade * 100) / Math.Max(1, _pickStatus.TotalGames))%"></div>
@@ -554,4 +558,10 @@
             
         return pick.SelectedTeamId == winningTeamId;
     }
+
+    private int CorrectPicksCount => _games?.Count(game =>
+    {
+        var pick = _userPicks?.FirstOrDefault(p => p.GameId == game.Id);
+        return game.IsCompleted && pick != null && pick.SelectedTeamId == game.WinningTeam?.Id;
+    }) ?? 0;
 } 

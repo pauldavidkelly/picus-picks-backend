@@ -44,4 +44,5 @@ Still to do:
 - [-] Import picks from Excel
     - [X] Paul's picks
     - [-] Glenn's picks
+- [ ] Add weeks pick total on picks page for selected week.
 - [ ] Rename repo to remove backend from the name

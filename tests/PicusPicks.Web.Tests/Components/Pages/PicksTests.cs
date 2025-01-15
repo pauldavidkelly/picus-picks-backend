@@ -269,4 +269,232 @@ public class PicksTests : TestContext
         var isLocked = gameCard.ClassList.Contains("locked");
         Assert.Equal(!bypassEnabled, isLocked); // Should be locked only when bypass is disabled
     }
+
+    [Fact]
+    public async Task CorrectPicksCount_WithNoCompletedGames_ReturnsZero()
+    {
+        // Arrange
+        var homeTeam1 = new TeamDTO { Id = 1, Name = "Home Team 1" };
+        var awayTeam1 = new TeamDTO { Id = 2, Name = "Away Team 1" };
+        var homeTeam2 = new TeamDTO { Id = 3, Name = "Home Team 2" };
+        var awayTeam2 = new TeamDTO { Id = 4, Name = "Away Team 2" };
+
+        var games = new List<GameDTO>
+        {
+            new() 
+            { 
+                Id = 1, 
+                IsCompleted = false,
+                HomeTeam = homeTeam1,
+                AwayTeam = awayTeam1,
+                WinningTeam = null
+            },
+            new() 
+            { 
+                Id = 2, 
+                IsCompleted = false,
+                HomeTeam = homeTeam2,
+                AwayTeam = awayTeam2,
+                WinningTeam = null
+            }
+        };
+
+        var picks = new List<VisiblePickDto>
+        {
+            new() { GameId = 1, SelectedTeamId = 1, HasPick = true, IsVisible = true },
+            new() { GameId = 2, SelectedTeamId = 2, HasPick = true, IsVisible = true }
+        };
+
+        var status = new PicksStatusDto
+        {
+            Week = 1,
+            Season = 2024,
+            TotalGames = 2,
+            PicksMade = 2,
+            IsComplete = true,
+            GamesNeedingPicks = new List<int>()
+        };
+
+        _mockGamesService
+            .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(games);
+
+        _mockPicksService
+            .Setup(x => x.GetMyPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync((picks, status));
+
+        _mockPicksService
+            .Setup(x => x.GetPickStatusAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(status);
+
+        // Mock the feature flag to be disabled
+        _mockFeatureFlagsSection.Setup(s => s.Value).Returns("false");
+        _mockConfiguration
+            .Setup(c => c.GetSection("FeatureFlags:BypassPickDeadlines"))
+            .Returns(_mockFeatureFlagsSection.Object);
+
+        // Act
+        var cut = RenderComponent<Picks>();
+
+        // Wait for async operations to complete
+        await cut.InvokeAsync(() => Task.Delay(100));
+
+        // Assert
+        var statusText = cut.Find(".status-text").TextContent;
+        Assert.Contains("(0 CORRECT)", statusText);
+    }
+
+    [Fact]
+    public async Task CorrectPicksCount_WithCompletedGames_ReturnsCorrectCount()
+    {
+        // Arrange
+        var homeTeam1 = new TeamDTO { Id = 1, Name = "Home Team 1" };
+        var awayTeam1 = new TeamDTO { Id = 2, Name = "Away Team 1" };
+        var homeTeam2 = new TeamDTO { Id = 3, Name = "Home Team 2" };
+        var awayTeam2 = new TeamDTO { Id = 4, Name = "Away Team 2" };
+
+        var games = new List<GameDTO>
+        {
+            new() 
+            { 
+                Id = 1, 
+                IsCompleted = true,
+                HomeTeamScore = 24,
+                AwayTeamScore = 17,
+                HomeTeam = homeTeam1,
+                AwayTeam = awayTeam1,
+                WinningTeam = homeTeam1  // Home team won (24-17)
+            },
+            new() 
+            { 
+                Id = 2, 
+                IsCompleted = true,
+                HomeTeamScore = 14,
+                AwayTeamScore = 28,
+                HomeTeam = homeTeam2,
+                AwayTeam = awayTeam2,
+                WinningTeam = awayTeam2  // Away team won (28-14)
+            }
+        };
+
+        var picks = new List<VisiblePickDto>
+        {
+            new() { GameId = 1, SelectedTeamId = 1, HasPick = true, IsVisible = true }, // Correct pick (home team won)
+            new() { GameId = 2, SelectedTeamId = 3, HasPick = true, IsVisible = true }  // Incorrect pick (away team won)
+        };
+
+        var status = new PicksStatusDto
+        {
+            Week = 1,
+            Season = 2024,
+            TotalGames = 2,
+            PicksMade = 2,
+            IsComplete = true,
+            GamesNeedingPicks = new List<int>()
+        };
+
+        _mockGamesService
+            .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(games);
+
+        _mockPicksService
+            .Setup(x => x.GetMyPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync((picks, status));
+
+        _mockPicksService
+            .Setup(x => x.GetPickStatusAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(status);
+
+        // Mock the feature flag to be disabled
+        _mockFeatureFlagsSection.Setup(s => s.Value).Returns("false");
+        _mockConfiguration
+            .Setup(c => c.GetSection("FeatureFlags:BypassPickDeadlines"))
+            .Returns(_mockFeatureFlagsSection.Object);
+
+        // Act
+        var cut = RenderComponent<Picks>();
+
+        // Wait for async operations to complete
+        await cut.InvokeAsync(() => Task.Delay(100));
+
+        // Assert
+        var statusText = cut.Find(".status-text").TextContent;
+        Assert.Contains("(1 CORRECT)", statusText);
+    }
+
+    [Fact]
+    public async Task CorrectPicksCount_WithMixedGameStates_OnlyCountsCompletedGames()
+    {
+        // Arrange
+        var homeTeam1 = new TeamDTO { Id = 1, Name = "Home Team 1" };
+        var awayTeam1 = new TeamDTO { Id = 2, Name = "Away Team 1" };
+        var homeTeam2 = new TeamDTO { Id = 3, Name = "Home Team 2" };
+        var awayTeam2 = new TeamDTO { Id = 4, Name = "Away Team 2" };
+
+        var games = new List<GameDTO>
+        {
+            new() 
+            { 
+                Id = 1, 
+                IsCompleted = true,
+                HomeTeamScore = 24,
+                AwayTeamScore = 17,
+                HomeTeam = homeTeam1,
+                AwayTeam = awayTeam1,
+                WinningTeam = homeTeam1  // Home team won (24-17)
+            },
+            new() 
+            { 
+                Id = 2, 
+                IsCompleted = false,
+                HomeTeam = homeTeam2,
+                AwayTeam = awayTeam2,
+                WinningTeam = null  // Game not completed
+            }
+        };
+
+        var picks = new List<VisiblePickDto>
+        {
+            new() { GameId = 1, SelectedTeamId = 1, HasPick = true, IsVisible = true }, // Correct pick for completed game
+            new() { GameId = 2, SelectedTeamId = 3, HasPick = true, IsVisible = true }  // Pick for incomplete game (shouldn't count)
+        };
+
+        var status = new PicksStatusDto
+        {
+            Week = 1,
+            Season = 2024,
+            TotalGames = 2,
+            PicksMade = 2,
+            IsComplete = true,
+            GamesNeedingPicks = new List<int>()
+        };
+
+        _mockGamesService
+            .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(games);
+
+        _mockPicksService
+            .Setup(x => x.GetMyPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync((picks, status));
+
+        _mockPicksService
+            .Setup(x => x.GetPickStatusAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(status);
+
+        // Mock the feature flag to be disabled
+        _mockFeatureFlagsSection.Setup(s => s.Value).Returns("false");
+        _mockConfiguration
+            .Setup(c => c.GetSection("FeatureFlags:BypassPickDeadlines"))
+            .Returns(_mockFeatureFlagsSection.Object);
+
+        // Act
+        var cut = RenderComponent<Picks>();
+
+        // Wait for async operations to complete
+        await cut.InvokeAsync(() => Task.Delay(100));
+
+        // Assert
+        var statusText = cut.Find(".status-text").TextContent;
+        Assert.Contains("(1 CORRECT)", statusText);
+    }
 } 
