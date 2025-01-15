@@ -34,6 +34,11 @@ public interface IPickService
     /// Get pick status for a user for a given week
     /// </summary>
     Task<PicksStatusDto> GetPickStatusAsync(int userId, int week, int season);
+
+    /// <summary>
+    /// Get all picks for a given week and season
+    /// </summary>
+    Task<IEnumerable<Pick>> GetAllPicksByWeekAsync(int week, int season);
     
     /// <summary>
     /// Get league table stats

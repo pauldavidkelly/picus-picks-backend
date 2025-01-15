@@ -203,4 +203,14 @@ public class PickService : IPickService
             throw;
         }
     }
+
+    public async Task<IEnumerable<Pick>> GetAllPicksByWeekAsync(int week, int season)
+    {
+        return await _context.Picks
+            .Include(p => p.Game)
+            .Include(p => p.SelectedTeam)
+            .Include(p => p.User)
+            .Where(p => p.Game.Week == week && p.Game.Season == season)
+            .ToListAsync();
+    }
 }

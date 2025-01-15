@@ -296,6 +296,63 @@ public class PickServiceTests : TestBase
     }
 
     [Fact]
+    public async Task GetAllPicksByWeekAsync_ReturnsAllPicks()
+    {
+        // Arrange
+        var user1 = new User { Id = 1, Name = "User 1" };
+        var user2 = new User { Id = 2, Name = "User 2" };
+        var game = new Game
+        {
+            Id = 1,
+            Week = 1,
+            Season = 2024,
+            HomeTeamId = 1,
+            AwayTeamId = 2
+        };
+        await SeedTestGame(game);
+
+        Context.Users.AddRange(user1, user2);
+        await Context.SaveChangesAsync();
+
+        var picks = new[]
+        {
+            new Pick { UserId = 1, GameId = 1, SelectedTeamId = 1 },
+            new Pick { UserId = 2, GameId = 1, SelectedTeamId = 2 }
+        };
+        Context.Picks.AddRange(picks);
+        await Context.SaveChangesAsync();
+
+        // Act
+        var result = await _service.GetAllPicksByWeekAsync(1, 2024);
+
+        // Assert
+        Assert.Equal(2, result.Count());
+        Assert.Contains(result, p => p.UserId == 1 && p.SelectedTeamId == 1);
+        Assert.Contains(result, p => p.UserId == 2 && p.SelectedTeamId == 2);
+    }
+
+    [Fact]
+    public async Task GetAllPicksByWeekAsync_ReturnsEmptyList_WhenNoPicksExist()
+    {
+        // Arrange
+        var game = new Game
+        {
+            Id = 1,
+            Week = 1,
+            Season = 2024,
+            HomeTeamId = 1,
+            AwayTeamId = 2
+        };
+        await SeedTestGame(game);
+
+        // Act
+        var result = await _service.GetAllPicksByWeekAsync(1, 2024);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
     public async Task GetLeagueTableStatsAsync_ReturnsCorrectStats()
     {
         // Arrange
