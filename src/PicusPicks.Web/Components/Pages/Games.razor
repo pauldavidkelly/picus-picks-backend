@@ -3,6 +3,7 @@
 @using PicusPicks.Web.Services
 @using Microsoft.AspNetCore.Components.Web
 @using Picus.Api.Models.DTOs
+@using PicusPicks.Web.Utilities
 @rendermode InteractiveServer
 @inject IGamesService GamesService
 @inject ILogger<Games> Logger
@@ -153,14 +154,24 @@
 </style>
 
 @code {
-    private bool _isSyncing;
+    private int _selectedWeek;
+    private IEnumerable<GameDTO>? _games;
     private string? _errorMessage;
     private string? _successMessage;
-    private int _selectedWeek = 1;
-    private IEnumerable<GameDTO>? _games;
+    private bool _isSyncing;
+
+    // For testing purposes
+    [Parameter]
+    public DateTimeOffset? CurrentDateOverride { get; set; }
+
+    private DateTimeOffset GetCurrentDate()
+    {
+        return CurrentDateOverride ?? DateTimeOffset.Parse("2025-01-15T08:31:49Z");
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        _selectedWeek = WeekCalculator.GetCurrentWeek(GetCurrentDate());
         await LoadGames();
     }
 
