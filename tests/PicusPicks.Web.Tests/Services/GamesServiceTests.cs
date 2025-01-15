@@ -41,14 +41,19 @@ public class GamesServiceTests
         };
 
         // Setup authentication service
+        var properties = new AuthenticationProperties();
         var authResult = AuthenticateResult.Success(
             new AuthenticationTicket(
                 new System.Security.Claims.ClaimsPrincipal(),
-                new AuthenticationProperties(),
+                properties,
                 "Bearer"
             )
         );
-        authResult.Properties.SetString(".Token.access_token", "test_token");
+        
+        if (authResult.Properties != null)
+        {
+            authResult.Properties.SetString(".Token.access_token", "test_token");
+        }
 
         _mockAuthService
             .Setup(x => x.AuthenticateAsync(It.IsAny<HttpContext>(), It.IsAny<string>()))

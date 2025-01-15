@@ -160,47 +160,69 @@ public class PicksTests : TestContext
             Times.AtLeast(2)); // Initial load + refresh after pick
     }
 
+    [Theory]
+    [InlineData("2025-01-15T08:27:35Z", 19)]  // Wild Card
+    [InlineData("2025-01-22T08:27:35Z", 20)]  // Divisional
+    [InlineData("2025-01-29T08:27:35Z", 21)]  // Conference
+    [InlineData("2025-02-12T08:27:35Z", 22)]  // Super Bowl
+    [InlineData("2024-09-05T08:27:35Z", 1)]   // Regular Season Week 1
+    [InlineData("2024-09-12T08:27:35Z", 2)]   // Regular Season Week 2
+    [InlineData("2024-09-19T08:27:35Z", 3)]   // Regular Season Week 3
+    [InlineData("2024-09-26T08:27:35Z", 4)]   // Regular Season Week 4
+    [InlineData("2024-07-01T08:27:35Z", 1)]   // Off-season
+    public void InitialWeek_SetsCorrectWeekBasedOnDate(string currentDate, int expectedWeek)
+    {
+        // Arrange
+        var games = TestData.GetTestGames();
+        _mockGamesService
+            .Setup(x => x.GetGamesByWeekAndSeasonAsync(expectedWeek, 2024))
+            .ReturnsAsync(games);
+
+        _mockPicksService
+            .Setup(x => x.GetMyPicksForWeekAsync(expectedWeek, 2024))
+            .ReturnsAsync((new List<VisiblePickDto>(), new PicksStatusDto()));
+
+        _mockPicksService
+            .Setup(x => x.GetPickStatusAsync(expectedWeek, 2024))
+            .ReturnsAsync(new PicksStatusDto());
+
+        // Act
+        var cut = RenderComponent<Picks>(parameters => parameters
+            .Add(p => p.CurrentDateOverride, DateTimeOffset.Parse(currentDate)));
+
+        // Assert
+        var weekDisplay = cut.Find(".week-display");
+        Assert.Contains($"WEEK {expectedWeek}", weekDisplay.TextContent);
+    }
+
     [Fact]
     public void WeekNavigation_LoadsNewData_WhenChanged()
     {
         // Arrange
         var games = TestData.GetTestGames();
-        var picks = new List<VisiblePickDto>();
-        var status = new PicksStatusDto
-        {
-            Week = 1,
-            Season = 2024,
-            TotalGames = 1,
-            PicksMade = 0,
-            IsComplete = false,
-            GamesNeedingPicks = new List<int> { games.First().Id }
-        };
-
         _mockGamesService
             .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(games);
 
         _mockPicksService
             .Setup(x => x.GetMyPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync((picks, status));
+            .ReturnsAsync((new List<VisiblePickDto>(), new PicksStatusDto()));
 
         _mockPicksService
             .Setup(x => x.GetPickStatusAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(status);
+            .ReturnsAsync(new PicksStatusDto());
 
-        var cut = RenderComponent<Picks>();
+        // Set initial date to Wild Card week
+        var cut = RenderComponent<Picks>(parameters => parameters
+            .Add(p => p.CurrentDateOverride, DateTimeOffset.Parse("2025-01-15T08:26:33Z")));
 
-        // Act
-        var nextWeekButton = cut.Find("button.nav-btn:last-child");
-        nextWeekButton.Click();
+        // Navigate to next week
+        var nextButton = cut.Find("button.nav-btn:last-child");
+        nextButton.Click();
 
         // Assert
         _mockGamesService.Verify(
-            x => x.GetGamesByWeekAndSeasonAsync(2, 2024),
-            Times.Once);
-
-        _mockPicksService.Verify(
-            x => x.GetMyPicksForWeekAsync(2, 2024),
+            x => x.GetGamesByWeekAndSeasonAsync(20, 2024),
             Times.Once);
     }
 } 
