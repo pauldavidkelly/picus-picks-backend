@@ -23,6 +23,24 @@ public class PicksController : ControllerBase
     }
 
     /// <summary>
+    /// Get league table stats for all users
+    /// </summary>
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetLeagueTableStats()
+    {
+        try
+        {
+            var stats = await _pickService.GetLeagueTableStatsAsync();
+            return Ok(stats);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving league table stats");
+            return StatusCode(500, new { message = "An error occurred while retrieving league table stats" });
+        }
+    }
+
+    /// <summary>
     /// Submit a pick for a game
     /// </summary>
     [HttpPost]

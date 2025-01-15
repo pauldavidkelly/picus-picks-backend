@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components.Server;
 using PicusPicks.Web.Components;
 using PicusPicks.Web.Configuration;
 using PicusPicks.Web.Services;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -97,7 +98,19 @@ builder.Services.AddHttpClient<IPicksService, PicksService>(client =>
     ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 });
 
-builder.Services.AddScoped<ILeagueTableService, LeagueTableService>();
+builder.Services.AddHttpClient<ILeagueTableService, LeagueTableService>(client =>
+{
+    var baseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5172/";
+    client.BaseAddress = new Uri(baseUrl);
+    builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>()
+        .LogInformation("Configuring LeagueTableService with base URL: {BaseUrl}", baseUrl);
+}).ConfigureHttpClient(client =>
+{
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+});
 
 var app = builder.Build();
 

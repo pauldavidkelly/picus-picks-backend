@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using PicusPicks.Web.Models;
 
 namespace PicusPicks.Web.Services;
@@ -41,7 +42,7 @@ public class LeagueTableService : ILeagueTableService
             // Authenticate to get the token
             var authResult = await authService.AuthenticateAsync(
                 _httpContextAccessor.HttpContext,
-                "Bearer");
+                OpenIdConnectDefaults.AuthenticationScheme);
 
             _logger.LogInformation("Auth result: {Success}", authResult.Succeeded);
 
@@ -64,13 +65,15 @@ public class LeagueTableService : ILeagueTableService
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
             // Get all users' picks from the API
-            var request = new HttpRequestMessage(HttpMethod.Get, "api/picks/stats");
-            var response = await _httpClient.SendAsync(request);
+            _logger.LogInformation("HttpClient BaseAddress: {BaseAddress}", _httpClient.BaseAddress);
+            var response = await _httpClient.GetAsync("/api/picks/stats");
             _logger.LogInformation("Response status: {Status}", response.StatusCode);
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("API request failed with status {Status}", response.StatusCode);
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("API request failed with status {Status}: {Error}", 
+                    response.StatusCode, error);
                 return Enumerable.Empty<LeagueTableStats>();
             }
 
@@ -83,8 +86,15 @@ public class LeagueTableService : ILeagueTableService
                 return Enumerable.Empty<LeagueTableStats>();
             }
 
-            // Sort by success rate descending
-            return content.OrderByDescending(x => x.SuccessRate);
+            var stats = content.OrderByDescending(x => x.SuccessRate).ToList();
+            _logger.LogInformation("Got {Count} stats entries", stats.Count);
+            foreach (var stat in stats)
+            {
+                _logger.LogInformation("User {User}: {Correct}/{Total} = {Rate}%", 
+                    stat.DisplayName, stat.CorrectPicks, stat.TotalPicks, stat.SuccessRate);
+            }
+
+            return stats;
         }
         catch (Exception ex)
         {

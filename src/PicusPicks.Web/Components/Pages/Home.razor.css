@@ -1,0 +1,30 @@
+.home-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+h1 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.lead {
+    color: #64748b;
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 640px) {
+    .home-container {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .lead {
+        font-size: 1rem;
+    }
+}
