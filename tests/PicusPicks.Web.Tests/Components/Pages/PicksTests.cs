@@ -149,7 +149,7 @@ public class PicksTests : TestContext
             .ReturnsAsync(new VisiblePickDto
             {
                 GameId = game.Id,
-                SelectedTeamId = game.HomeTeam.Id,
+                SelectedTeamId = game.AwayTeam.Id,
                 HasPick = true,
                 IsVisible = true
             });
@@ -164,7 +164,7 @@ public class PicksTests : TestContext
         _mockPicksService.Verify(
             x => x.SubmitPickAsync(It.Is<SubmitPickDto>(p => 
                 p.GameId == game.Id && 
-                p.SelectedTeamId == game.HomeTeam.Id)),
+                p.SelectedTeamId == game.AwayTeam.Id)),
             Times.Once);
 
         _mockPicksService.Verify(

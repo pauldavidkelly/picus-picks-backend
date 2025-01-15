@@ -85,27 +85,27 @@
                     </div>
                     <div class="teams-container">
                         <div class="team">
-                            <img src="@game.HomeTeam.IconUrl" alt="@game.HomeTeam.Name" class="team-logo" />
-                            <div class="team-name">@game.HomeTeam.Name</div>
+                            <img src="@game.AwayTeam.IconUrl" alt="@game.AwayTeam.Name" class="team-logo" />
+                            <div class="team-name">@game.AwayTeam.Name</div>
                         </div>
                         <div class="vs">AT</div>
                         <div class="team">
-                            <img src="@game.AwayTeam.IconUrl" alt="@game.AwayTeam.Name" class="team-logo" />
-                            <div class="team-name">@game.AwayTeam.Name</div>
+                            <img src="@game.HomeTeam.IconUrl" alt="@game.HomeTeam.Name" class="team-logo" />
+                            <div class="team-name">@game.HomeTeam.Name</div>
                         </div>
                     </div>
                     @if (!IsGameLocked(game))
                     {
                         <div class="pick-buttons">
-                            <button class="team-button @GetPickButtonClass(game.HomeTeam.Id)"
-                                    @onclick="() => MakePick(game.Id, game.HomeTeam.Id)"
-                                    style="background-color: @GetTeamButtonColor(game.HomeTeam.PrimaryColor, game.HomeTeam.Id)">
-                                @game.HomeTeam.Name
-                            </button>
                             <button class="team-button @GetPickButtonClass(game.AwayTeam.Id)"
                                     @onclick="() => MakePick(game.Id, game.AwayTeam.Id)"
                                     style="background-color: @GetTeamButtonColor(game.AwayTeam.PrimaryColor, game.AwayTeam.Id)">
                                 @game.AwayTeam.Name
+                            </button>
+                            <button class="team-button @GetPickButtonClass(game.HomeTeam.Id)"
+                                    @onclick="() => MakePick(game.Id, game.HomeTeam.Id)"
+                                    style="background-color: @GetTeamButtonColor(game.HomeTeam.PrimaryColor, game.HomeTeam.Id)">
+                                @game.HomeTeam.Name
                             </button>
                         </div>
                         <div class="deadline-text">
@@ -118,7 +118,7 @@
                             @if (game.IsCompleted)
                             {
                                 <div class="score">
-                                    @game.HomeTeamScore - @game.AwayTeamScore
+                                    @game.AwayTeamScore - @game.HomeTeamScore
                                     <div class="quarter">FINAL</div>
                                 </div>
                             }

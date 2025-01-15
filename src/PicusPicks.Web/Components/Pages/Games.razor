@@ -77,20 +77,20 @@
         <div class="games-list">
             @foreach (var game in _games)
             {
-                <div class="card mb-3" style="background: linear-gradient(90deg, @game.HomeTeam.PrimaryColor 0%, #1a1a1a 20%, #1a1a1a 80%, @game.AwayTeam.PrimaryColor 100%);">
+                <div class="card mb-3" style="background: linear-gradient(90deg, @game.AwayTeam.PrimaryColor 0%, #1a1a1a 20%, #1a1a1a 80%, @game.HomeTeam.PrimaryColor 100%);">
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-4">
                                 <div class="d-flex align-items-center">
-                                    <img src="@game.HomeTeam.IconUrl" alt="@game.HomeTeam.Name" class="team-logo me-2" />
-                                    <span class="team-name">@($"{game.HomeTeam.City} {game.HomeTeam.Name}")</span>
+                                    <span class="team-name">@($"{game.AwayTeam.City} {game.AwayTeam.Name}")</span>
+                                    <img src="@game.AwayTeam.IconUrl" alt="@game.AwayTeam.Name" class="team-logo ms-2" />
                                 </div>
                             </div>
                             <div class="col-md-4 text-center">
                                 @if (game.IsCompleted)
                                 {
                                     <div class="score">
-                                        <div class="h3 mb-2">@game.HomeTeamScore - @game.AwayTeamScore</div>
+                                        <div class="h3 mb-2">@game.AwayTeamScore - @game.HomeTeamScore</div>
                                         <div class="badge bg-success">Final</div>
                                         <div class="stadium text-muted mt-2">@game.Location</div>
                                     </div>
@@ -106,8 +106,8 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="d-flex align-items-center justify-content-end">
-                                    <span class="team-name">@($"{game.AwayTeam.City} {game.AwayTeam.Name}")</span>
-                                    <img src="@game.AwayTeam.IconUrl" alt="@game.AwayTeam.Name" class="team-logo ms-2" />
+                                    <img src="@game.HomeTeam.IconUrl" alt="@game.HomeTeam.Name" class="team-logo me-2" />
+                                    <span class="team-name">@($"{game.HomeTeam.City} {game.HomeTeam.Name}")</span>
                                 </div>
                             </div>
                         </div>
