@@ -206,7 +206,7 @@ public class PickService : IPickService
 
     public async Task<IEnumerable<Pick>> GetAllPicksByWeekAsync(int week, int season)
     {
-        return await _context.Picks
+        return await _dbContext.Picks
             .Include(p => p.Game)
             .Include(p => p.SelectedTeam)
             .Include(p => p.User)
