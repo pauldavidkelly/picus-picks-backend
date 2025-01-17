@@ -34,15 +34,18 @@ So that we can see who has the best picks
 
 ## Notes
 Still to do:
-- [ ] Create league standings view
-- [ ] Home page shows league view on login
-- [ ] Create login page with background image and login button
+- [X] Create league standings view
+- [X] Home page shows league view on login
+- [X] Create login page with background image and login button
 - [X] Create weekly league picks grid view
     - [ ] For completed weeks/games have a win-loss row for each player that week
 - [X] Create tab on picks page to switch between user picks and league picks
-- [ ] Get Glenn to login so we have his user account
-- [-] Import picks from Excel
+- [X] Get Glenn to login so we have his user account
+- [X] Import picks from Excel
     - [X] Paul's picks
-    - [-] Glenn's picks
-- [ ] Add weeks pick total on picks page for selected week.
+    - [X] Glenn's picks
+- [X] Add weeks pick total on picks page for selected week.
 - [ ] Rename repo to remove backend from the name
+- [ ] Picks gridneeds actual name
+    - [ ] From profile or do we need to update Auth0 claims?
+- [ ] Deploy to Azure

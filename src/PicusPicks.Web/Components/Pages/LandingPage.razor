@@ -1,0 +1,28 @@
+@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavigationManager
+
+<PageTitle>Welcome to Picus Picks</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <Home />
+    </Authorized>
+    <NotAuthorized>
+        <div class="landing-container">
+            <div class="landing-content">
+                <img src="img/home-page.png" alt="Welcome to Picus Picks" class="landing-image" />
+                <h1>Welcome to Picus Picks</h1>
+                <p>Join the excitement and make your picks today!</p>
+                <a href="Account/Login" class="login-button">Log In</a>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private void Login()
+    {
+        NavigationManager.NavigateTo("Account/Login", forceLoad: true);
+    }
+}
