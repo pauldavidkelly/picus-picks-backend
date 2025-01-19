@@ -13,7 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Picus.Api\Picus.Api.csproj" />
+    <ProjectReference Include="..\Picus.Api\Picus.Api.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>contentfiles;runtime</ExcludeAssets>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>
