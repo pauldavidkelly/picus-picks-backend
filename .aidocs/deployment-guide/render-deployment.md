@@ -224,15 +224,92 @@ Auth0__CallbackPath=/callback
 
 ## Step 3: Frontend Web Service Setup
 
-1. Click "New +" and select "Static Site"
+### Creating the Frontend Dockerfile
+
+Before setting up the frontend service on Render, you'll need two files in your repository root:
+
+1. `Dockerfile.web` for building and serving the Blazor WebAssembly app:
+```dockerfile
+# Use the official .NET SDK image for building
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy csproj and restore dependencies
+COPY ["src/PicusPicks.Web/PicusPicks.Web.csproj", "PicusPicks.Web/"]
+RUN dotnet restore "PicusPicks.Web/PicusPicks.Web.csproj"
+
+# Copy the rest of the source code
+COPY ["src/PicusPicks.Web/", "PicusPicks.Web/"]
+
+# Build and publish the app
+RUN dotnet publish "PicusPicks.Web/PicusPicks.Web.csproj" -c Release -o /app/publish
+
+# Use nginx to serve the static files
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
+COPY --from=build /app/publish/wwwroot .
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+2. `nginx.conf` for configuring the web server:
+```nginx
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    server {
+        listen 80;
+        server_name localhost;
+        root /usr/share/nginx/html;
+        index index.html;
+        location / {
+            try_files $uri $uri/ /index.html =404;
+            add_header Cache-Control "no-cache";
+        }
+        
+        # Handle static files with caching
+        location /css {
+            expires 1y;
+            add_header Cache-Control "public";
+        }
+        
+        location /js {
+            expires 1y;
+            add_header Cache-Control "public";
+        }
+        
+        location /_framework {
+            expires 1y;
+            add_header Cache-Control "public";
+        }
+    }
+}
+```
+
+> 💡 Pro Tips for the Frontend Setup:
+> - We use nginx to serve the static files efficiently
+> - The configuration includes proper caching headers
+> - All routes are redirected to index.html for client-side routing
+> - The Blazor WebAssembly files are served with long cache times
+
+### Setting up the Frontend Service
+
+1. Click "New +" and select "Web Service" (not Static Site)
 2. Connect your Git repository
 3. Configure the service:
    - Name: `picus-picks-web`
+   - Environment: `Docker`
    - Branch: `main` (or your deployment branch)
-   - Build Command: `dotnet publish -c Release -o publish`
-   - Publish Directory: `publish/wwwroot`
-   - Environment: `.NET`
-   - Instance Type: Free
+   - Docker Build Context: `.`
+   - Dockerfile Path: `Dockerfile.web`
+   - Region: Same as your API
+   - Instance Type: Free (512MB)
 
 ### Update API Configuration
 
