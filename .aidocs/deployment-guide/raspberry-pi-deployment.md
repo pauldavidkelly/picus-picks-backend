@@ -67,6 +67,12 @@ AUTH0_DOMAIN=your-auth0-domain
 AUTH0_AUDIENCE=your-auth0-audience
 AUTH0_CLIENT_ID=your-auth0-client-id
 
+# TheSportsDB Settings
+THESPORTSDB_API_KEY=your-api-key
+
+# Access Control
+ALLOWED_EMAILS=user1@example.com,user2@example.com
+
 # Frontend Settings
 FRONTEND_PORT=8080
 API_BASE_URL=http://your-pi-ip:5000

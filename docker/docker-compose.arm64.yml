@@ -14,6 +14,9 @@ services:
       - Auth0__Audience=${AUTH0_AUDIENCE}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - TheSportsDb__ApiKey=${THESPORTSDB_API_KEY}
+      - TheSportsDb__Url=${THESPORTSDB_URL}
+      - AllowedEmails=${ALLOWED_EMAILS}
 
   web:
     build:
