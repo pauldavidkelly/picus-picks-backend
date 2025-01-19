@@ -29,4 +29,4 @@ So that I can compare my prediction success rate with others
 5. Table handles edge cases:
    - Users with no picks (show 0%)
    - Null/missing data
-   - Large numbers of users (pagination)
+   - Large numbers of users (pagination)dded 
