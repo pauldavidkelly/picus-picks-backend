@@ -9,14 +9,14 @@ services:
     ports:
       - "${API_PORT}:80"
     environment:
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
-      - Auth0__Domain=${AUTH0_DOMAIN}
-      - Auth0__Audience=${AUTH0_AUDIENCE}
+      - CONNECTIONSTRINGS__DEFAULTCONNECTION=${DATABASE_CONNECTION}
+      - AUTH0__DOMAIN=${AUTH0_DOMAIN}
+      - AUTH0__AUDIENCE=${AUTH0_AUDIENCE}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      - TheSportsDb__ApiKey=${THESPORTSDB_API_KEY}
-      - TheSportsDb__Url=${THESPORTSDB_URL}
-      - AllowedEmails=${ALLOWED_EMAILS}
+      - THESPORTSDB__APIKEY=${THESPORTSDB_API_KEY}
+      - THESPORTSDB__URL=${THESPORTSDB_URL}
+      - ALLOWEDEMAILS=${ALLOWED_EMAILS}
 
   web:
     build:
@@ -26,10 +26,10 @@ services:
     ports:
       - "${FRONTEND_PORT}:80"
     environment:
-      - ApiBaseUrl=${API_BASE_URL}
-      - Auth0__Domain=${AUTH0_DOMAIN}
-      - Auth0__ClientId=${AUTH0_CLIENT_ID}
-      - Auth0__ClientSecret=${AUTH0_CLIENT_SECRET}
-      - Auth0__Audience=${AUTH0_AUDIENCE}
+      - APIBASEURL=${API_BASE_URL}
+      - AUTH0__DOMAIN=${AUTH0_DOMAIN}
+      - AUTH0__CLIENTID=${AUTH0_CLIENT_ID}
+      - AUTH0__CLIENTSECRET=${AUTH0_CLIENT_SECRET}
+      - AUTH0__AUDIENCE=${AUTH0_AUDIENCE}
     depends_on:
       - api

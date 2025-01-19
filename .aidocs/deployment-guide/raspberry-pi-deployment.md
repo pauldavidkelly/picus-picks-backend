@@ -55,7 +55,7 @@ chmod 600 .env.production  # Restrict file permissions
 2. Add your environment variables (adjust values accordingly):
 ```bash
 # Database (from Neon.tech)
-DB_CONNECTION=postgres://user:password@ep-something.region.aws.neon.tech/database
+DATABASE_CONNECTION=postgres://user:password@ep-something.region.aws.neon.tech/database
 
 # API Settings
 API_PORT=5000
@@ -66,9 +66,11 @@ ALLOWED_ORIGINS=http://localhost:8080,http://your-pi-ip:8080
 AUTH0_DOMAIN=your-auth0-domain
 AUTH0_AUDIENCE=your-auth0-audience
 AUTH0_CLIENT_ID=your-auth0-client-id
+AUTH0_CLIENT_SECRET=your-auth0-client-secret
 
 # TheSportsDB Settings
 THESPORTSDB_API_KEY=your-api-key
+THESPORTSDB_URL=your-api-url
 
 # Access Control
 ALLOWED_EMAILS=user1@example.com,user2@example.com
@@ -94,7 +96,7 @@ services:
     ports:
       - "${API_PORT}:80"
     environment:
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+      - ConnectionStrings__DefaultConnection=${DATABASE_CONNECTION}
       - Auth0__Domain=${AUTH0_DOMAIN}
       - Auth0__Audience=${AUTH0_AUDIENCE}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
