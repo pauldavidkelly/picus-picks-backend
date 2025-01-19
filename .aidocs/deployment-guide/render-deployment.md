@@ -51,8 +51,29 @@ psql "postgres://user:password@hostname/database" < your_backup.sql
 
 3. If your backup is a custom format (`.backup`):
 ```bash
-pg_restore -d "postgres://user:password@hostname/database" your_backup.backup
+# For backups with role/owner issues, use these flags:
+pg_restore \
+  --no-owner \                    # Skip commands to set ownership of objects
+  --no-privileges \               # Skip restoration of access privileges (grant/revoke)
+  --no-comments \                 # Don't output commands to restore comments
+  --clean \                       # Clean (drop) database objects before recreating
+  --if-exists \                   # Use IF EXISTS when dropping objects
+  -d "postgres://user:password@hostname/database" \
+  your_backup.backup
 ```
+
+> 💡 Pro Tips for Database Restoration:
+> - Neon creates the `public` schema automatically, so you might see (and can ignore) the "schema public already exists" error
+> - The default Neon user is the owner of all objects, so we skip owner/privilege restoration
+> - If you still get errors, you can create a clean backup from your source database:
+>   ```bash
+>   pg_dump \
+>     --no-owner \
+>     --no-privileges \
+>     --no-comments \
+>     -Fc \
+>     your_source_database > clean_backup.backup
+>   ```
 
 #### Option 2: Using pg_dump over HTTPS (For larger databases)
 
@@ -74,6 +95,42 @@ If you get errors during restoration:
 
 ## Step 2: Web Service Setup
 
+### Creating the Dockerfile
+
+Before setting up the web service on Render, you'll need a Dockerfile in your repository root. Create a file named `Dockerfile` (no extension) with the following content:
+
+```dockerfile
+# Use the official .NET SDK image for building
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy csproj and restore dependencies
+COPY ["src/Picus.Api/Picus.Api.csproj", "Picus.Api/"]
+RUN dotnet restore "Picus.Api/Picus.Api.csproj"
+
+# Copy the rest of the source code
+COPY ["src/Picus.Api/", "Picus.Api/"]
+
+# Build the application
+RUN dotnet publish "Picus.Api/Picus.Api.csproj" -c Release -o /app/publish
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "Picus.Api.dll"]
+```
+
+> 💡 Pro Tips for the Dockerfile:
+> - We use a multi-stage build to keep the final image small
+> - The SDK image is only used for building, while the smaller ASP.NET runtime image is used for deployment
+> - We expose port 8080 as required by Render
+> - Environment variables can be overridden in Render's dashboard
+
+### Setting up the Web Service
+
 1. Click "New +" and select "Web Service"
 2. Connect your Git repository
 3. Configure the service:
@@ -82,6 +139,8 @@ If you get errors during restoration:
    - Branch: `main` (or your deployment branch)
    - Region: Same as your database
    - Instance Type: Free (512MB)
+   - Build Command: (leave empty, Docker will handle this)
+   - Start Command: (leave empty, Docker will handle this)
 
 ### Configuration Setup
 
