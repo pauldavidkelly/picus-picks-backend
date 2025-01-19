@@ -234,12 +234,14 @@ Before setting up the frontend service on Render, you'll need two files in your 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore dependencies
+# Copy all csproj files and restore as distinct layers
 COPY ["src/PicusPicks.Web/PicusPicks.Web.csproj", "PicusPicks.Web/"]
+COPY ["src/Picus.Api/Picus.Api.csproj", "Picus.Api/"]
 RUN dotnet restore "PicusPicks.Web/PicusPicks.Web.csproj"
 
-# Copy the rest of the source code
+# Copy everything else
 COPY ["src/PicusPicks.Web/", "PicusPicks.Web/"]
+COPY ["src/Picus.Api/", "Picus.Api/"]
 
 # Build and publish the app
 RUN dotnet publish "PicusPicks.Web/PicusPicks.Web.csproj" -c Release -o /app/publish
@@ -252,6 +254,13 @@ COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
+
+> 💡 Pro Tips for the Frontend Dockerfile:
+> - We include the API project because the web project references its types (DTOs, etc.)
+> - We use multi-stage build to keep the final image small
+> - The first stage builds the .NET application
+> - The second stage only contains the static files and nginx
+> - We copy project files first to take advantage of Docker's layer caching
 
 2. `nginx.conf` for configuring the web server:
 ```nginx

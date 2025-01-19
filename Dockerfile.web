@@ -2,12 +2,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore dependencies
+# Copy all csproj files and restore as distinct layers
 COPY ["src/PicusPicks.Web/PicusPicks.Web.csproj", "PicusPicks.Web/"]
+COPY ["src/Picus.Api/Picus.Api.csproj", "Picus.Api/"]
 RUN dotnet restore "PicusPicks.Web/PicusPicks.Web.csproj"
 
-# Copy the rest of the source code
+# Copy everything else
 COPY ["src/PicusPicks.Web/", "PicusPicks.Web/"]
+COPY ["src/Picus.Api/", "Picus.Api/"]
 
 # Build and publish the app
 RUN dotnet publish "PicusPicks.Web/PicusPicks.Web.csproj" -c Release -o /app/publish
