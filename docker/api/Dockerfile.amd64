@@ -1,0 +1,18 @@
+# Use x86/64 SDK image for building
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy csproj and restore dependencies
+COPY ["src/Picus.Api/Picus.Api.csproj", "Picus.Api/"]
+RUN dotnet restore "Picus.Api/Picus.Api.csproj"
+
+# Copy everything else and build
+COPY ["src/Picus.Api/", "Picus.Api/"]
+RUN dotnet publish "Picus.Api/Picus.Api.csproj" -c Release -o /app/publish
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 80
+ENTRYPOINT ["dotnet", "Picus.Api.dll"]
