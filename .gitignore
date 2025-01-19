@@ -12,6 +12,8 @@ obj/
 ## Local development settings
 appsettings.Development.json
 appsettings.Local.json
+.env
+.env.production
 
 ## Logs
 logs/
