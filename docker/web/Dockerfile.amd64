@@ -10,7 +10,15 @@ RUN dotnet restore "PicusPicks.Web/PicusPicks.Web.csproj"
 # Copy everything else and build
 COPY ["src/PicusPicks.Web/", "PicusPicks.Web/"]
 COPY ["src/Picus.Api/", "Picus.Api/"]
-RUN dotnet publish "PicusPicks.Web/PicusPicks.Web.csproj" -c Release -o /app/publish
+
+# Publish with specific settings to avoid appsettings conflict
+RUN dotnet publish "PicusPicks.Web/PicusPicks.Web.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    /p:PublishDir=/app/publish \
+    /p:CopyLocalLockFileAssemblies=true \
+    /p:ExcludeConfigFilesFromBuildOutput=true
 
 # Use standard nginx
 FROM nginx:alpine
