@@ -1,5 +1,5 @@
 services:
-  - type: docker
+  - type: Docker # Changed to PascalCase
     name: api
     dockerfilePath: docker/api/Dockerfile.amd64
     ports:
@@ -19,11 +19,11 @@ services:
         value: ${THESPORTSDB_API_KEY}
       - name: THESPORTSDB__URL
         value: ${THESPORTSDB_URL}
-      - name: ALLOWEDEMAILS_Entries # Changed to ALLOWEDEMAILS_Entries (single underscore)
+      - name: ALLOWEDEMAILS__Entries # Changed to ALLOWEDEMAILS_Entries (single underscore)
         value: | # Use YAML list syntax
           boondockgeek@gmail.com
           paul@kelly.ky
-  - type: web
+  - type: Web # Changed to PascalCase
     name: web
     dockerfilePath: docker/web/Dockerfile.amd64
     staticPublishPath: /usr/share/nginx/html
