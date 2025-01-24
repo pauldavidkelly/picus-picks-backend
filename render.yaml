@@ -1,43 +1,38 @@
 services:
-  - type: Docker # Changed to PascalCase
+  - type: docker
     name: api
     dockerfilePath: docker/api/Dockerfile.amd64
-    ports:
-      - 8080:80
     envVars:
-      - name: CONNECTIONSTRINGS__DEFAULTCONNECTION
+      - key: CONNECTIONSTRINGS__DEFAULTCONNECTION
         value: ${DATABASE_CONNECTION}
-      - name: AUTH0__DOMAIN
+      - key: AUTH0__DOMAIN
         value: ${AUTH0_DOMAIN}
-      - name: AUTH0__AUDIENCE
+      - key: AUTH0__AUDIENCE
         value: ${AUTH0_AUDIENCE}
-      - name: ALLOWED_ORIGINS
+      - key: ALLOWED_ORIGINS
         value: '*'
-      - name: ASPNETCORE_ENVIRONMENT
+      - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - name: THESPORTSDB__APIKEY
+      - key: THESPORTSDB__APIKEY
         value: ${THESPORTSDB_API_KEY}
-      - name: THESPORTSDB__URL
+      - key: THESPORTSDB__URL
         value: ${THESPORTSDB_URL}
-      - name: ALLOWEDEMAILS__Entries # Changed to ALLOWEDEMAILS_Entries (single underscore)
-        value: | # Use YAML list syntax
-          boondockgeek@gmail.com
-          paul@kelly.ky
-  - type: Web # Changed to PascalCase
+      - key: ALLOWEDEMAILS__ENTRIES
+        value: boondockgeek@gmail.com,paul@kelly.ky
+    port: 80
+
+  - type: web
     name: web
     dockerfilePath: docker/web/Dockerfile.amd64
-    staticPublishPath: /usr/share/nginx/html
-    port: 80
     envVars:
-      - name: APIBASEURL
+      - key: APIBASEURL
         value: ${API_BASE_URL}
-      - name: AUTH0__DOMAIN
+      - key: AUTH0__DOMAIN
         value: ${AUTH0_DOMAIN}
-      - name: AUTH0__CLIENTID
+      - key: AUTH0__CLIENTID
         value: ${AUTH0_CLIENT_ID}
-      - name: AUTH0__CLIENTSECRET
+      - key: AUTH0__CLIENTSECRET
         value: ${AUTH0_CLIENT_SECRET}
-      - name: AUTH0__AUDIENCE
+      - key: AUTH0__AUDIENCE
         value: ${AUTH0_AUDIENCE}
-    dependsOn:
-      - api
+    port: 80
