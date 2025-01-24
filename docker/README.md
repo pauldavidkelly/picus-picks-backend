@@ -24,14 +24,14 @@ docker/
 
 ```bash
 # Build and run the ARM64 version
-docker compose -f docker/docker-compose.arm64.yml up -d
+docker compose --env-file ../.env.production -f docker/docker-compose.arm64.yml up -d
 ```
 
 ### For x86_64 Servers (AMD64)
 
 ```bash
 # Build and run the AMD64 version
-docker compose -f docker/docker-compose.amd64.yml up -d
+docker compose --env-file ../.env.production -f docker/docker-compose.amd64.yml up -d
 ```
 
 ## Key Differences
