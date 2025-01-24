@@ -1,0 +1,41 @@
+services:
+  - type: docker
+    name: api
+    dockerfilePath: docker/api/Dockerfile.amd64
+    ports:
+      - 8080:80
+    envVars:
+      - name: CONNECTIONSTRINGS__DEFAULTCONNECTION
+        value: ${DATABASE_CONNECTION}
+      - name: AUTH0__DOMAIN
+        value: ${AUTH0_DOMAIN}
+      - name: AUTH0__AUDIENCE
+        value: ${AUTH0_AUDIENCE}
+      - name: ALLOWED_ORIGINS
+        value: '*'
+      - name: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - name: THESPORTSDB__APIKEY
+        value: ${THESPORTSDB_API_KEY}
+      - name: THESPORTSDB__URL
+        value: ${THESPORTSDB_URL}
+      - name: ALLOWEDEMAILS
+        value: ${ALLOWED_EMAILS}
+  - type: web
+    name: web
+    dockerfilePath: docker/web/Dockerfile.amd64
+    staticPublishPath: /usr/share/nginx/html
+    port: 80
+    envVars:
+      - name: APIBASEURL
+        value: ${API_BASE_URL}
+      - name: AUTH0__DOMAIN
+        value: ${AUTH0_DOMAIN}
+      - name: AUTH0__CLIENTID
+        value: ${AUTH0_CLIENT_ID}
+      - name: AUTH0__CLIENTSECRET
+        value: ${AUTH0_CLIENT_SECRET}
+      - name: AUTH0__AUDIENCE
+        value: ${AUTH0_AUDIENCE}
+    dependsOn:
+      - api
