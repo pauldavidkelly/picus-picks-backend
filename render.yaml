@@ -19,8 +19,10 @@ services:
         value: ${THESPORTSDB_API_KEY}
       - name: THESPORTSDB__URL
         value: ${THESPORTSDB_URL}
-      - name: ALLOWEDEMAILS__ENTRIES # Changed to ALLOWEDEMAILS__ENTRIES
-        value: ${ALLOWED_EMAILS} # Keep comma-separated value for now
+      - name: ALLOWEDEMAILS__ENTRIES
+        value: | # Use YAML list syntax
+          boondockgeek@gmail.com
+          paul@kelly.ky
   - type: web
     name: web
     dockerfilePath: docker/web/Dockerfile.amd64

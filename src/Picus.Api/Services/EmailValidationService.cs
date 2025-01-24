@@ -20,6 +20,7 @@ public class EmailValidationService : IEmailValidationService
             config.Value.Entries.Select(e => e.ToLowerInvariant()),
             StringComparer.OrdinalIgnoreCase
         );
+        _logger.LogInformation("Allowed emails loaded for validation: {AllowedEmails}", string.Join(", ", _allowedEmails));
     }
 
     /// <inheritdoc />
