@@ -19,7 +19,7 @@ services:
         value: ${THESPORTSDB_API_KEY}
       - name: THESPORTSDB__URL
         value: ${THESPORTSDB_URL}
-      - name: ALLOWEDEMAILS__ENTRIES
+      - name: ALLOWEDEMAILS_Entries # Changed to ALLOWEDEMAILS_Entries (single underscore)
         value: | # Use YAML list syntax
           boondockgeek@gmail.com
           paul@kelly.ky
