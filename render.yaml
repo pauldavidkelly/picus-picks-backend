@@ -21,7 +21,8 @@ services:
         value: ${THESPORTSDB_URL}
       - key: ALLOWEDEMAILS__ENTRIES
         value: boondockgeek@gmail.com,paul@kelly.ky
-    port: 80
+      - key: PORT
+        value: 80
 
   - type: web
     name: web
@@ -39,4 +40,5 @@ services:
         value: ${AUTH0_CLIENT_SECRET}
       - key: AUTH0__AUDIENCE
         value: ${AUTH0_AUDIENCE}
-    port: 80
+      - key: PORT
+        value: 80
