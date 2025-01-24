@@ -6,10 +6,19 @@ using Picus.Api.Configuration;
 using Picus.Api.Data;
 using Picus.Api.Middleware;
 using Picus.Api.Services;
+using System.Collections; // Add this line
 using System.Text.Json.Serialization;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Log environment variables at startup
+Console.WriteLine("Environment Variables:");
+foreach (DictionaryEntry envVar in Environment.GetEnvironmentVariables()) // Add cast here
+{
+    Console.WriteLine($"- {envVar.Key}: {envVar.Value}");
+}
+Console.WriteLine("----------------------");
 
 // Configure logging
 builder.Logging.ClearProviders();
@@ -104,7 +113,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         builder =>
         {
-            builder.WithOrigins("http://localhost:5173")  
+            builder.WithOrigins("http://localhost:5173", "http://localhost:5272")
                    .AllowAnyMethod()
                    .AllowAnyHeader()
                    .AllowCredentials();
