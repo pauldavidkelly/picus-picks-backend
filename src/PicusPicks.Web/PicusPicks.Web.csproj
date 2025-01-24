@@ -9,14 +9,12 @@
   <ItemGroup>
     <PackageReference Include="Auth0.AspNetCore.Authentication" Version="1.4.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.1" />
     <PackageReference Include="MudBlazor" Version="7.15.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Picus.Api\Picus.Api.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>contentfiles;runtime</ExcludeAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\Picus.Api\Picus.Api.csproj" />
   </ItemGroup>
 
 </Project>
