@@ -19,8 +19,8 @@ services:
         value: ${THESPORTSDB_API_KEY}
       - name: THESPORTSDB__URL
         value: ${THESPORTSDB_URL}
-      - name: ALLOWEDEMAILS
-        value: ${ALLOWED_EMAILS}
+      - name: ALLOWEDEMAILS__ENTRIES # Changed to ALLOWEDEMAILS__ENTRIES
+        value: ${ALLOWED_EMAILS} # Keep comma-separated value for now
   - type: web
     name: web
     dockerfilePath: docker/web/Dockerfile.amd64
