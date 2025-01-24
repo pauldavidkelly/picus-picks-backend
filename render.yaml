@@ -1,6 +1,8 @@
 services:
-  - type: docker
+  - type: web
     name: api
+    plan: standard
+    region: ohio
     dockerfilePath: docker/api/Dockerfile.amd64
     envVars:
       - key: CONNECTIONSTRINGS__DEFAULTCONNECTION
@@ -23,6 +25,8 @@ services:
 
   - type: web
     name: web
+    plan: standard
+    region: ohio
     dockerfilePath: docker/web/Dockerfile.amd64
     envVars:
       - key: APIBASEURL
