@@ -1,6 +1,7 @@
 services:
   - type: web
     name: api
+    runtime: docker
     plan: standard
     region: ohio
     dockerfilePath: docker/api/Dockerfile.amd64
@@ -26,6 +27,7 @@ services:
 
   - type: web
     name: web
+    runtime: docker
     plan: standard
     region: ohio
     dockerfilePath: docker/web/Dockerfile.amd64
