@@ -7,7 +7,7 @@ using Xunit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
-using Picus.Api.Models.DTOs;
+using PicusPicks.Web.Models.DTOs;
 
 namespace PicusPicks.Web.ComponentTests;
 
@@ -18,6 +18,7 @@ public class PicksPageTests : TestContext
     private readonly Mock<ILogger<Picks>> _loggerMock;
     private readonly Mock<IJSRuntime> _jsRuntimeMock;
     private readonly Mock<IConfiguration> _configurationMock;
+    private readonly Mock<IConfigurationSection> _featureFlagsSectionMock;
 
     public PicksPageTests()
     {
@@ -26,6 +27,12 @@ public class PicksPageTests : TestContext
         _loggerMock = new Mock<ILogger<Picks>>();
         _jsRuntimeMock = new Mock<IJSRuntime>();
         _configurationMock = new Mock<IConfiguration>();
+        _featureFlagsSectionMock = new Mock<IConfigurationSection>();
+
+        // Setup configuration mock for feature flags
+        _featureFlagsSectionMock.Setup(x => x.Value).Returns("false");
+        _configurationMock.Setup(x => x.GetSection("FeatureFlags:BypassPickDeadlines"))
+            .Returns(_featureFlagsSectionMock.Object);
 
         Services.AddSingleton(_picksServiceMock.Object);
         Services.AddSingleton(_gamesServiceMock.Object);
@@ -50,11 +57,24 @@ public class PicksPageTests : TestContext
             new() { GameId = 2, SelectedTeamId = 2 }
         };
 
-        _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(games);
+        var status = new PicksStatusDto
+        {
+            Week = 1,
+            Season = 2024,
+            TotalGames = 2,
+            PicksMade = 2,
+            IsComplete = true,
+            GamesNeedingPicks = new List<int>()
+        };
 
-        _picksServiceMock.Setup(x => x.GetPicksForWeekAsync(It.IsAny<int>()))
-            .ReturnsAsync(picks);
+        _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(games.AsEnumerable());
+
+        _picksServiceMock.Setup(x => x.GetMyPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync((picks, status));
+
+        _picksServiceMock.Setup(x => x.GetPickStatusAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(status);
 
         // Act
         var cut = RenderComponent<Picks>();
@@ -77,7 +97,8 @@ public class PicksPageTests : TestContext
                 HomeTeamScore = 24,
                 AwayTeamScore = 17,
                 HomeTeam = new TeamDTO { Id = 1 },
-                AwayTeam = new TeamDTO { Id = 2 }
+                AwayTeam = new TeamDTO { Id = 2 },
+                WinningTeam = new TeamDTO { Id = 1 }
             },
             new() 
             { 
@@ -86,7 +107,8 @@ public class PicksPageTests : TestContext
                 HomeTeamScore = 14,
                 AwayTeamScore = 28,
                 HomeTeam = new TeamDTO { Id = 3 },
-                AwayTeam = new TeamDTO { Id = 4 }
+                AwayTeam = new TeamDTO { Id = 4 },
+                WinningTeam = new TeamDTO { Id = 4 }
             }
         };
 
@@ -96,11 +118,24 @@ public class PicksPageTests : TestContext
             new() { GameId = 2, SelectedTeamId = 3 }  // Incorrect pick (away team won)
         };
 
-        _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(games);
+        var status = new PicksStatusDto
+        {
+            Week = 1,
+            Season = 2024,
+            TotalGames = 2,
+            PicksMade = 2,
+            IsComplete = true,
+            GamesNeedingPicks = new List<int>()
+        };
 
-        _picksServiceMock.Setup(x => x.GetPicksForWeekAsync(It.IsAny<int>()))
-            .ReturnsAsync(picks);
+        _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(games.AsEnumerable());
+
+        _picksServiceMock.Setup(x => x.GetMyPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync((picks, status));
+
+        _picksServiceMock.Setup(x => x.GetPickStatusAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(status);
 
         // Act
         var cut = RenderComponent<Picks>();
@@ -123,7 +158,8 @@ public class PicksPageTests : TestContext
                 HomeTeamScore = 24,
                 AwayTeamScore = 17,
                 HomeTeam = new TeamDTO { Id = 1 },
-                AwayTeam = new TeamDTO { Id = 2 }
+                AwayTeam = new TeamDTO { Id = 2 },
+                WinningTeam = new TeamDTO { Id = 1 }
             },
             new() 
             { 
@@ -140,11 +176,24 @@ public class PicksPageTests : TestContext
             new() { GameId = 2, SelectedTeamId = 3 }  // Pick for incomplete game (shouldn't count)
         };
 
-        _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(games);
+        var status = new PicksStatusDto
+        {
+            Week = 1,
+            Season = 2024,
+            TotalGames = 2,
+            PicksMade = 2,
+            IsComplete = true,
+            GamesNeedingPicks = new List<int>()
+        };
 
-        _picksServiceMock.Setup(x => x.GetPicksForWeekAsync(It.IsAny<int>()))
-            .ReturnsAsync(picks);
+        _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(games.AsEnumerable());
+
+        _picksServiceMock.Setup(x => x.GetMyPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync((picks, status));
+
+        _picksServiceMock.Setup(x => x.GetPickStatusAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(status);
 
         // Act
         var cut = RenderComponent<Picks>();

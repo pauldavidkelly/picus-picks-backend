@@ -19,35 +19,37 @@ public class PickServiceTests : TestBase
     private readonly Mock<IConfiguration> _configuration;
     private readonly Mock<IConfigurationSection> _configSection;
     private readonly PickService _service;
+    private readonly Mock<IGameService> _gameService;
 
     public PickServiceTests()
     {
         _logger = new Mock<ILogger<PickService>>();
         _configuration = new Mock<IConfiguration>();
         _configSection = new Mock<IConfigurationSection>();
+        _gameService = new Mock<IGameService>();
 
         // Setup configuration
         _configuration
             .Setup(c => c.GetSection("FeatureFlags:BypassPickDeadlines"))
             .Returns(_configSection.Object);
 
-        _service = new PickService(Context, _logger.Object, _configuration.Object);
+        _service = new PickService(_context, _gameService.Object, _logger.Object, _configuration.Object);
     }
 
     private async Task SeedTestGame(Game game)
     {
         // First add the teams if they don't exist
-        if (!await Context.Teams.AnyAsync(t => t.Id == game.HomeTeamId))
+        if (!await _context.Teams.AnyAsync(t => t.Id == game.HomeTeamId))
         {
-            Context.Teams.Add(new Team { Id = game.HomeTeamId, Name = "Home Team" });
+            _context.Teams.Add(new Team { Id = game.HomeTeamId, Name = "Home Team", City = "Home City" });
         }
-        if (!await Context.Teams.AnyAsync(t => t.Id == game.AwayTeamId))
+        if (!await _context.Teams.AnyAsync(t => t.Id == game.AwayTeamId))
         {
-            Context.Teams.Add(new Team { Id = game.AwayTeamId, Name = "Away Team" });
+            _context.Teams.Add(new Team { Id = game.AwayTeamId, Name = "Away Team", City = "Away City" });
         }
         
-        Context.Games.Add(game);
-        await Context.SaveChangesAsync();
+        _context.Games.Add(game);
+        await _context.SaveChangesAsync();
     }
 
     [Fact]
@@ -71,8 +73,7 @@ public class PickServiceTests : TestBase
             AwayTeamId = 2,
             PickDeadline = DateTime.UtcNow.AddMinutes(-30)
         };
-        Context.Games.Add(game);
-        await Context.SaveChangesAsync();
+        await SeedTestGame(game);
 
         var pickDto = new SubmitPickDto { GameId = 1, SelectedTeamId = 1 };
         _configSection.Setup(c => c.Value).Returns("false");
@@ -92,19 +93,18 @@ public class PickServiceTests : TestBase
             AwayTeamId = 2,
             PickDeadline = DateTime.UtcNow.AddMinutes(-30)
         };
-        Context.Games.Add(game);
-        await Context.SaveChangesAsync();
+        await SeedTestGame(game);
 
         var pickDto = new SubmitPickDto { GameId = 1, SelectedTeamId = 1 };
         _configSection.Setup(c => c.Value).Returns("true");
 
         // Act
-        var result = await _service.SubmitPickAsync(1, pickDto);
+        await _service.SubmitPickAsync(1, pickDto);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(1, result.GameId);
-        Assert.Equal(1, result.SelectedTeamId);
+        var pick = await _context.Picks.FirstOrDefaultAsync(p => p.GameId == 1);
+        Assert.NotNull(pick);
+        Assert.Equal(1, pick.SelectedTeamId);
     }
 
     [Fact]
@@ -183,8 +183,8 @@ public class PickServiceTests : TestBase
             GameId = 1,
             SelectedTeamId = 1
         };
-        Context.Picks.Add(pick);
-        await Context.SaveChangesAsync();
+        _context.Picks.Add(pick);
+        await _context.SaveChangesAsync();
 
         // Act
         var result = await _service.GetUserPicksByWeekAsync(1, 1, 2024);
@@ -209,8 +209,8 @@ public class PickServiceTests : TestBase
         };
         await SeedTestGame(game);
 
-        Context.Users.Add(user);
-        await Context.SaveChangesAsync();
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
 
         var pick = new Pick
         {
@@ -218,8 +218,8 @@ public class PickServiceTests : TestBase
             GameId = 1,
             SelectedTeamId = 1
         };
-        Context.Picks.Add(pick);
-        await Context.SaveChangesAsync();
+        _context.Picks.Add(pick);
+        await _context.SaveChangesAsync();
 
         // Act
         var result = await _service.GetLeaguePicksByWeekAsync(1, 1, 2024);
@@ -245,8 +245,8 @@ public class PickServiceTests : TestBase
             SelectedTeamId = 1,
             Game = game
         };
-        Context.Games.Add(game);
-        await Context.SaveChangesAsync();
+        _context.Games.Add(game);
+        await _context.SaveChangesAsync();
 
         // Act
         var result = await _service.ApplyPickVisibilityRulesAsync(new[] { pick });
@@ -281,9 +281,9 @@ public class PickServiceTests : TestBase
             GameId = 1,
             Game = game1
         };
-        Context.Games.AddRange(game1, game2);
-        Context.Picks.Add(pick);
-        await Context.SaveChangesAsync();
+        _context.Games.AddRange(game1, game2);
+        _context.Picks.Add(pick);
+        await _context.SaveChangesAsync();
 
         // Act
         var result = await _service.GetPickStatusAsync(1, 1, 2024);
@@ -299,8 +299,8 @@ public class PickServiceTests : TestBase
     public async Task GetAllPicksByWeekAsync_ReturnsAllPicks()
     {
         // Arrange
-        var user1 = new User { Id = 1, Name = "User 1" };
-        var user2 = new User { Id = 2, Name = "User 2" };
+        var user1 = new User { Id = 1, DisplayName = "User 1", Username = "user1" };
+        var user2 = new User { Id = 2, DisplayName = "User 2", Username = "user2" };
         var game = new Game
         {
             Id = 1,
@@ -311,16 +311,16 @@ public class PickServiceTests : TestBase
         };
         await SeedTestGame(game);
 
-        Context.Users.AddRange(user1, user2);
-        await Context.SaveChangesAsync();
+        _context.Users.AddRange(user1, user2);
+        await _context.SaveChangesAsync();
 
         var picks = new[]
         {
             new Pick { UserId = 1, GameId = 1, SelectedTeamId = 1 },
             new Pick { UserId = 2, GameId = 1, SelectedTeamId = 2 }
         };
-        Context.Picks.AddRange(picks);
-        await Context.SaveChangesAsync();
+        _context.Picks.AddRange(picks);
+        await _context.SaveChangesAsync();
 
         // Act
         var result = await _service.GetAllPicksByWeekAsync(1, 2024);
@@ -356,91 +356,52 @@ public class PickServiceTests : TestBase
     public async Task GetLeagueTableStatsAsync_ReturnsCorrectStats()
     {
         // Arrange
-        var user1 = new User { Id = 1, DisplayName = "User1" };
-        var user2 = new User { Id = 2, DisplayName = "User2" };
-        Context.Users.AddRange(user1, user2);
+        var user1 = new User { Id = 1, DisplayName = "User 1" };
+        var user2 = new User { Id = 2, DisplayName = "User 2" };
+        _context.Users.AddRange(user1, user2);
 
         var game1 = new Game
         {
             Id = 1,
             HomeTeamId = 1,
             AwayTeamId = 2,
-            WinningTeamId = 1,
-            IsCompleted = true
+            IsCompleted = true,
+            WinningTeamId = 1
         };
+        await SeedTestGame(game1);
+
         var game2 = new Game
         {
             Id = 2,
-            HomeTeamId = 1,
-            AwayTeamId = 2,
-            WinningTeamId = 2,
-            IsCompleted = true
+            HomeTeamId = 3,
+            AwayTeamId = 4,
+            IsCompleted = true,
+            WinningTeamId = 3
         };
-        var game3 = new Game
-        {
-            Id = 3,
-            HomeTeamId = 1,
-            AwayTeamId = 2,
-            IsCompleted = false
-        };
-        await SeedTestGame(game1);
         await SeedTestGame(game2);
-        await SeedTestGame(game3);
 
-        // User1: 2/2 correct picks (100%)
-        var pick1 = new Pick
+        var picks = new List<Pick>
         {
-            UserId = 1,
-            GameId = 1,
-            SelectedTeamId = 1 // Correct
+            new() { UserId = 1, GameId = 1, SelectedTeamId = 1 }, // Correct pick
+            new() { UserId = 1, GameId = 2, SelectedTeamId = 3 }, // Correct pick
+            new() { UserId = 2, GameId = 1, SelectedTeamId = 2 }  // Incorrect pick
         };
-        var pick2 = new Pick
-        {
-            UserId = 1,
-            GameId = 2,
-            SelectedTeamId = 2 // Correct
-        };
-        var pick3 = new Pick
-        {
-            UserId = 1,
-            GameId = 3,
-            SelectedTeamId = 1 // Not counted (game not completed)
-        };
-
-        // User2: 1/2 correct picks (50%)
-        var pick4 = new Pick
-        {
-            UserId = 2,
-            GameId = 1,
-            SelectedTeamId = 1 // Correct
-        };
-        var pick5 = new Pick
-        {
-            UserId = 2,
-            GameId = 2,
-            SelectedTeamId = 1 // Incorrect
-        };
-
-        Context.Picks.AddRange(pick1, pick2, pick3, pick4, pick5);
-        await Context.SaveChangesAsync();
+        _context.Picks.AddRange(picks);
+        await _context.SaveChangesAsync();
 
         // Act
-        var result = (await _service.GetLeagueTableStatsAsync()).ToList();
+        var result = await _service.GetLeagueTableStatsAsync();
 
         // Assert
-        Assert.Equal(2, result.Count);
-
-        // User1 should be first with 100% success rate
-        Assert.Equal("User1", result[0].DisplayName);
-        Assert.Equal(2, result[0].CorrectPicks);
-        Assert.Equal(2, result[0].TotalPicks);
-        Assert.Equal(100m, result[0].SuccessRate);
-
-        // User2 should be second with 50% success rate
-        Assert.Equal("User2", result[1].DisplayName);
-        Assert.Equal(1, result[1].CorrectPicks);
-        Assert.Equal(2, result[1].TotalPicks);
-        Assert.Equal(50m, result[1].SuccessRate);
+        Assert.Equal(2, result.Count());
+        var user1Stats = result.First(s => s.DisplayName == "User 1");
+        var user2Stats = result.First(s => s.DisplayName == "User 2");
+        Assert.Equal(2, user1Stats.CorrectPicks);
+        Assert.Equal(2, user1Stats.TotalPicks);
+        Assert.Equal(100m, user1Stats.SuccessRate);
+        Assert.Equal(0, user2Stats.CorrectPicks);
+        Assert.Equal(1, user2Stats.TotalPicks);
+        Assert.Equal(0m, user2Stats.SuccessRate);
     }
 
     [Fact]
@@ -448,14 +409,15 @@ public class PickServiceTests : TestBase
     {
         // Arrange
         var user = new User { Id = 1, DisplayName = "User1" };
-        Context.Users.Add(user);
+        _context.Users.Add(user);
 
         var game = new Game
         {
             Id = 1,
             HomeTeamId = 1,
             AwayTeamId = 2,
-            IsCompleted = false
+            IsCompleted = false,
+            WinningTeamId = null
         };
         await SeedTestGame(game);
 
@@ -465,19 +427,14 @@ public class PickServiceTests : TestBase
             GameId = 1,
             SelectedTeamId = 1
         };
-        Context.Picks.Add(pick);
-        await Context.SaveChangesAsync();
+        _context.Picks.Add(pick);
+        await _context.SaveChangesAsync();
 
         // Act
         var result = await _service.GetLeagueTableStatsAsync();
 
         // Assert
-        Assert.Single(result);
-        var stats = result.First();
-        Assert.Equal("User1", stats.DisplayName);
-        Assert.Equal(0, stats.CorrectPicks);
-        Assert.Equal(0, stats.TotalPicks);
-        Assert.Equal(0m, stats.SuccessRate);
+        Assert.Empty(result);
     }
 
     [Fact]

@@ -1,14 +1,15 @@
 using Bunit;
 using PicusPicks.Web.Components;
-using Picus.Api.Models;
-using Picus.Api.Models.DTOs;
+using PicusPicks.Web.Models.DTOs;
 using PicusPicks.Web.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace PicusPicks.Web.Tests.Components
 {
@@ -16,6 +17,7 @@ namespace PicusPicks.Web.Tests.Components
     {
         private readonly Mock<IPicksService> _picksServiceMock;
         private readonly Mock<IGamesService> _gamesServiceMock;
+        private readonly Mock<ILogger<UsersPicksGrid>> _loggerMock;
         private readonly List<GameDTO> _testGames;
         private readonly List<VisiblePickDto> _testPicks;
 
@@ -23,8 +25,11 @@ namespace PicusPicks.Web.Tests.Components
         {
             _picksServiceMock = new Mock<IPicksService>();
             _gamesServiceMock = new Mock<IGamesService>();
+            _loggerMock = new Mock<ILogger<UsersPicksGrid>>();
+
             Services.AddScoped(_ => _picksServiceMock.Object);
             Services.AddScoped(_ => _gamesServiceMock.Object);
+            Services.AddScoped(_ => _loggerMock.Object);
 
             // Setup test data
             _testGames = new List<GameDTO>
@@ -33,10 +38,11 @@ namespace PicusPicks.Web.Tests.Components
                 {
                     Id = 1,
                     GameTime = DateTime.UtcNow,
-                    AwayTeam = new TeamDTO { Id = 1, Name = "Away Team", IconUrl = "away.png" },
-                    HomeTeam = new TeamDTO { Id = 2, Name = "Home Team", IconUrl = "home.png" },
+                    PickDeadline = DateTime.UtcNow.AddMinutes(-15),
+                    HomeTeam = new TeamDTO { Id = 1, Name = "Home Team", IconUrl = "home.png" },
+                    AwayTeam = new TeamDTO { Id = 2, Name = "Away Team", IconUrl = "away.png" },
                     IsCompleted = true,
-                    WinningTeam = new TeamDTO { Id = 1, Name = "Away Team", IconUrl = "away.png" }
+                    WinningTeam = new TeamDTO { Id = 1, Name = "Home Team", IconUrl = "home.png" }
                 }
             };
 
@@ -46,19 +52,84 @@ namespace PicusPicks.Web.Tests.Components
                 {
                     UserId = 1,
                     GameId = 1,
-                    SelectedTeamId = 1
+                    SelectedTeamId = 1,
+                    HasPick = true,
+                    IsVisible = true
                 }
             };
 
-            _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(1, 2024))
+            _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(_testGames);
+            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(_testPicks);
+        }
+
+        [Fact]
+        public void ShowsLoadingState_WhenDataIsLoading()
+        {
+            // Arrange
+            var taskCompletionSource = new TaskCompletionSource<IEnumerable<GameDTO>>();
+            _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .Returns(taskCompletionSource.Task);
+
+            // Act
+            var cut = RenderComponent<UsersPicksGrid>(parameters => parameters
+                .Add(p => p.Week, 1)
+                .Add(p => p.Season, 2024));
+
+            // Assert
+            cut.Find(".spinner-border").MarkupMatches("<div class=\"spinner-border\" role=\"status\"><span class=\"visually-hidden\">Loading...</span></div>");
+        }
+
+        [Fact]
+        public void ShowsNoGamesMessage_WhenNoGamesExist()
+        {
+            // Arrange
+            _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(new List<GameDTO>());
+
+            // Act
+            var cut = RenderComponent<UsersPicksGrid>(parameters => parameters
+                .Add(p => p.Week, 1)
+                .Add(p => p.Season, 2024));
+
+            // Assert
+            cut.Find(".alert-info").MarkupMatches("<div class=\"alert alert-info\">No games found for Week 1.</div>");
+        }
+
+        [Fact]
+        public void ShowsErrorMessage_WhenPicksLoadingFails()
+        {
+            // Arrange
+            var games = new List<GameDTO>
+            {
+                new() { Id = 1, HomeTeam = new TeamDTO { Id = 1, Name = "Team 1" }, AwayTeam = new TeamDTO { Id = 2, Name = "Team 2" } }
+            };
+
+            _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(games);
+
+            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .ThrowsAsync(new Exception("Failed to load picks"));
+
+            // Act
+            var cut = RenderComponent<UsersPicksGrid>(parameters => parameters
+                .Add(p => p.Week, 1)
+                .Add(p => p.Season, 2024));
+
+            // Wait for the component to finish rendering
+            cut.WaitForState(() => cut.FindAll(".alert-warning").Any());
+
+            // Assert
+            var errorMessage = cut.Find(".alert-warning");
+            Assert.Contains("Error loading picks data", errorMessage.TextContent);
         }
 
         [Fact]
         public void Should_Render_Games_And_Picks()
         {
             // Arrange
-            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(1, 2024))
+            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(_testPicks);
 
             var cut = RenderComponent<UsersPicksGrid>(parameters => parameters
@@ -77,7 +148,7 @@ namespace PicusPicks.Web.Tests.Components
         public void Should_Show_Winner_Indicator_For_Completed_Games()
         {
             // Arrange
-            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(1, 2024))
+            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(_testPicks);
 
             var cut = RenderComponent<UsersPicksGrid>(parameters => parameters
@@ -93,7 +164,7 @@ namespace PicusPicks.Web.Tests.Components
         public void Should_Show_Correct_Pick_Styling()
         {
             // Arrange
-            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(1, 2024))
+            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(_testPicks);
 
             var cut = RenderComponent<UsersPicksGrid>(parameters => parameters
@@ -109,7 +180,7 @@ namespace PicusPicks.Web.Tests.Components
         public void Should_Show_Team_Logos()
         {
             // Arrange
-            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(1, 2024))
+            _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(_testPicks);
 
             var cut = RenderComponent<UsersPicksGrid>(parameters => parameters

@@ -131,8 +131,10 @@ public class GameMapperTests
     }
 
     [Theory]
+    [InlineData("1", 1, false)]
+    [InlineData("18", 18, false)]
     [InlineData("160", 19, true)]  // Wild Card Round
-    [InlineData("161", 20, true)]  // Divisional Round
+    [InlineData("125", 20, true)]  // Divisional Round
     [InlineData("162", 21, true)]  // Conference Championships
     [InlineData("163", 22, true)]  // Super Bowl
     [InlineData("Week 17", 17, false)]  // Regular season

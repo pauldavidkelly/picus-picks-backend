@@ -4,12 +4,10 @@ WORKDIR /src
 
 # Copy csproj files and restore
 COPY ["src/PicusPicks.Web/PicusPicks.Web.csproj", "PicusPicks.Web/"]
-COPY ["src/Picus.Api/Picus.Api.csproj", "Picus.Api/"]
 RUN dotnet restore "PicusPicks.Web/PicusPicks.Web.csproj"
 
 # Copy everything else and build
 COPY ["src/PicusPicks.Web/", "src/PicusPicks.Web/"]
-COPY ["src/Picus.Api/Models", "src/Picus.Api/Models"]
 
 # Publish
 RUN dotnet publish "src/PicusPicks.Web/PicusPicks.Web.csproj" -c Release -o /app/publish

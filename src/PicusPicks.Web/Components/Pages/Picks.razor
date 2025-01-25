@@ -3,9 +3,13 @@
 @using Microsoft.AspNetCore.Authorization
 @using PicusPicks.Web.Services
 @using Microsoft.AspNetCore.Components.Web
-@using Picus.Api.Models.DTOs
 @using PicusPicks.Web.Utilities
 @using Microsoft.Extensions.Configuration
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@using PicusPicks.Web.Models.DTOs
+@using System.Linq
+@using Microsoft.Extensions.Logging
 @rendermode InteractiveServer
 @inject IPicksService PicksService
 @inject IGamesService GamesService
@@ -14,6 +18,8 @@
 @inject IConfiguration Configuration
 @inject NavigationManager NavigationManager
 @attribute [Authorize]
+
+@inherits ComponentBase
 
 <PageTitle>Picks</PageTitle>
 
@@ -48,7 +54,7 @@
         @if (_pickStatus != null)
         {
             <div class="pick-status">
-                @if (bool.TryParse(Configuration.GetSection("FeatureFlags:BypassPickDeadlines").Value, out bool bypassEnabled) && bypassEnabled)
+                @if (bool.TryParse(((IConfiguration)Configuration).GetSection("FeatureFlags:BypassPickDeadlines").Value, out bool bypassEnabled) && bypassEnabled)
                 {
                     <div class="bypass-warning">
                         ⚠️ DEADLINE CHECKS DISABLED - Historical Pick Entry Mode
@@ -432,7 +438,7 @@
 
     private string _activeTab = "my-picks";
     private int _selectedWeek;
-    private IEnumerable<Picus.Api.Models.DTOs.GameDTO>? _games;
+    private IEnumerable<GameDTO>? _games;
     private PicksStatusDto? _pickStatus;
     private IEnumerable<VisiblePickDto> _userPicks = new List<VisiblePickDto>();
     private DateTime? _nextDeadline;
@@ -440,6 +446,11 @@
     // For testing purposes
     [Parameter]
     public DateTimeOffset? CurrentDateOverride { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        _activeTab = string.IsNullOrEmpty(Tab) ? "my-picks" : Tab.ToLower();
+    }
 
     private DateTimeOffset GetCurrentDate()
     {
@@ -456,9 +467,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Set active tab from route parameter
-        _activeTab = string.IsNullOrEmpty(Tab) ? "my-picks" : Tab.ToLower();
-        
         var currentDate = GetCurrentDate();
         
         _selectedWeek = currentDate.Month switch
@@ -540,10 +548,10 @@
         return gameTime.ToLocalTime().ToString("dddd").ToUpper();
     }
 
-    private bool IsGameLocked(Picus.Api.Models.DTOs.GameDTO game)
+    private bool IsGameLocked(GameDTO game)
     {
         // Check if deadline bypass is enabled
-        var bypassEnabled = bool.TryParse(Configuration.GetSection("FeatureFlags:BypassPickDeadlines").Value, out bool bypass) && bypass;
+        var bypassEnabled = Configuration.GetSection("FeatureFlags:BypassPickDeadlines").Get<bool>();
         if (bypassEnabled)
         {
             return false;

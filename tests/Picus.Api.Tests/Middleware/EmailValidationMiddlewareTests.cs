@@ -108,16 +108,16 @@ public class EmailValidationMiddlewareTests
             .WithEmail(ValidEmail, claimType)
             .Build();
 
-        _mockEmailValidationService
-            .Setup(x => x.IsEmailAllowed(ValidEmail))
-            .Returns(true);
-
         var nextCalled = false;
         RequestDelegate next = (HttpContext ctx) =>
         {
             nextCalled = true;
             return Task.CompletedTask;
         };
+
+        _mockEmailValidationService
+            .Setup(x => x.IsEmailAllowed(ValidEmail))
+            .Returns(true);
 
         var middleware = CreateMiddleware(next);
 

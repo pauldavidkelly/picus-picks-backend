@@ -42,6 +42,7 @@ public class EmailValidationMiddleware
         var emailClaim = context.User.Claims.FirstOrDefault(c => EmailClaimTypes.Contains(c.Type));
         if (emailClaim == null)
         {
+            _logger.LogWarning("Authenticated request without email claim");
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await WriteJsonResponse(context, "Email claim is required.");
             return;
