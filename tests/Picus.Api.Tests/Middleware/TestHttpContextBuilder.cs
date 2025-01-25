@@ -27,6 +27,12 @@ public class TestHttpContextBuilder
         return this;
     }
 
+    public TestHttpContextBuilder WithClaim(string type, string value)
+    {
+        _claims.Add(new Claim(type, value));
+        return this;
+    }
+
     public TestHttpContextBuilder WithAuthentication()
     {
         _isAuthenticated = true;

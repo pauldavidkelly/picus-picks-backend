@@ -4,6 +4,7 @@ using PicusPicks.Web.Models.DTOs;
 using PicusPicks.Web.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Components;
 using Moq;
 using Xunit;
 using System;
@@ -98,27 +99,45 @@ namespace PicusPicks.Web.Tests.Components
         }
 
         [Fact]
-        public void ShowsErrorMessage_WhenPicksLoadingFails()
+        public async Task ShowsErrorMessage_WhenPicksLoadingFails()
         {
             // Arrange
             var games = new List<GameDTO>
             {
-                new() { Id = 1, HomeTeam = new TeamDTO { Id = 1, Name = "Team 1" }, AwayTeam = new TeamDTO { Id = 2, Name = "Team 2" } }
+                new() 
+                { 
+                    Id = 1, 
+                    GameTime = DateTime.UtcNow.AddDays(1),
+                    HomeTeam = new TeamDTO { Id = 1, Name = "Team 1" }, 
+                    AwayTeam = new TeamDTO { Id = 2, Name = "Team 2" } 
+                }
             };
 
+            var gamesTask = new TaskCompletionSource<IEnumerable<GameDTO>>();
+            var picksTask = new TaskCompletionSource<IEnumerable<VisiblePickDto>>();
+
             _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
-                .ReturnsAsync(games);
+                .Returns(gamesTask.Task);
 
             _picksServiceMock.Setup(x => x.GetAllPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
-                .ThrowsAsync(new Exception("Failed to load picks"));
+                .Returns(picksTask.Task);
 
             // Act
             var cut = RenderComponent<UsersPicksGrid>(parameters => parameters
                 .Add(p => p.Week, 1)
                 .Add(p => p.Season, 2024));
 
-            // Wait for the component to finish rendering
-            cut.WaitForState(() => cut.FindAll(".alert-warning").Any());
+            // Verify initial loading state
+            var spinner = cut.Find(".spinner-border");
+            Assert.NotNull(spinner);
+
+            // Complete games task
+            await cut.InvokeAsync(() => gamesTask.SetResult(games));
+            await Task.Delay(50);
+
+            // Fail picks task
+            await cut.InvokeAsync(() => picksTask.SetException(new Exception("Failed to load picks")));
+            await Task.Delay(50);
 
             // Assert
             var errorMessage = cut.Find(".alert-warning");

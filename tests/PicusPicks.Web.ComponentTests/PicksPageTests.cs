@@ -42,13 +42,27 @@ public class PicksPageTests : TestContext
     }
 
     [Fact]
-    public void CorrectPicksCount_WithNoCompletedGames_ReturnsZero()
+    public async Task CorrectPicksCount_WithNoCompletedGames_ReturnsZero()
     {
         // Arrange
         var games = new List<GameDTO>
         {
-            new() { Id = 1, IsCompleted = false },
-            new() { Id = 2, IsCompleted = false }
+            new() 
+            { 
+                Id = 1, 
+                IsCompleted = false, 
+                GameTime = DateTime.UtcNow.AddDays(1),
+                HomeTeam = new TeamDTO { Id = 1, Name = "Team 1" },
+                AwayTeam = new TeamDTO { Id = 2, Name = "Team 2" }
+            },
+            new() 
+            { 
+                Id = 2, 
+                IsCompleted = false, 
+                GameTime = DateTime.UtcNow.AddDays(1),
+                HomeTeam = new TeamDTO { Id = 3, Name = "Team 3" },
+                AwayTeam = new TeamDTO { Id = 4, Name = "Team 4" }
+            }
         };
 
         var picks = new List<VisiblePickDto>
@@ -67,17 +81,35 @@ public class PicksPageTests : TestContext
             GamesNeedingPicks = new List<int>()
         };
 
+        var gamesTask = new TaskCompletionSource<IEnumerable<GameDTO>>();
+        var picksTask = new TaskCompletionSource<(IEnumerable<VisiblePickDto>, PicksStatusDto)>();
+        var statusTask = new TaskCompletionSource<PicksStatusDto>();
+
         _gamesServiceMock.Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(games.AsEnumerable());
+            .Returns(gamesTask.Task);
 
         _picksServiceMock.Setup(x => x.GetMyPicksForWeekAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync((picks, status));
+            .Returns(picksTask.Task);
 
         _picksServiceMock.Setup(x => x.GetPickStatusAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(status);
+            .Returns(statusTask.Task);
 
         // Act
         var cut = RenderComponent<Picks>();
+
+        // Complete tasks in sequence
+        await cut.InvokeAsync(() => gamesTask.SetResult(games));
+        await Task.Delay(100); // Wait for games to process
+
+        await cut.InvokeAsync(() => picksTask.SetResult((picks, status)));
+        await Task.Delay(100); // Wait for picks to process
+
+        await cut.InvokeAsync(() => statusTask.SetResult(status));
+        await Task.Delay(100); // Wait for status to process
+
+        // Force a re-render
+        cut.Render();
+        await Task.Delay(100);
 
         // Assert
         var statusText = cut.Find(".status-text").TextContent;

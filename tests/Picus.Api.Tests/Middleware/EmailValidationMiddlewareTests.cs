@@ -106,6 +106,7 @@ public class EmailValidationMiddlewareTests
         var context = _contextBuilder
             .WithAuthentication()
             .WithEmail(ValidEmail, claimType)
+            .WithClaim(ClaimTypes.NameIdentifier, "auth0|123")
             .Build();
 
         var nextCalled = false;
@@ -118,6 +119,10 @@ public class EmailValidationMiddlewareTests
         _mockEmailValidationService
             .Setup(x => x.IsEmailAllowed(ValidEmail))
             .Returns(true);
+
+        _mockUserService
+            .Setup(x => x.GetOrCreateUserAsync("auth0|123", ValidEmail))
+            .ReturnsAsync(new Models.User { Email = ValidEmail });
 
         var middleware = CreateMiddleware(next);
 
