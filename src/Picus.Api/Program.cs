@@ -100,9 +100,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Add DbContext
 builder.Services.AddDbContext<PicusDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-    .LogTo(Console.WriteLine, LogLevel.Information)
-    .EnableSensitiveDataLogging());
+{
+    var connectionString = builder.Configuration["DATABASE_URL"] 
+        ?? builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Database connection string not found");
+        
+    options.UseNpgsql(connectionString)
+        .LogTo(Console.WriteLine, LogLevel.Information)
+        .EnableSensitiveDataLogging();
+});
 
 // Add Services
 builder.Services.AddHttpClient<ISportsDbService, SportsDbService>();
