@@ -70,8 +70,15 @@ builder.Services.AddSwaggerGen(c =>
 // Configure settings
 var auth0Settings = builder.Configuration.GetSection("Auth0").Get<Auth0Settings>();
 builder.Services.Configure<Auth0Settings>(builder.Configuration.GetSection("Auth0"));
-builder.Services.Configure<AllowedEmailsConfig>(
-    builder.Configuration.GetSection(AllowedEmailsConfig.SectionName));
+
+// Configure AllowedEmails from environment variable
+var allowedEmailsConfig = new AllowedEmailsConfig();
+var allowedEmailsStr = builder.Configuration["ALLOWEDEMAILS"];
+if (!string.IsNullOrEmpty(allowedEmailsStr))
+{
+    allowedEmailsConfig.Entries = allowedEmailsStr.Split(',').Select(e => e.Trim()).ToList();
+}
+builder.Services.Configure<AllowedEmailsConfig>(config => config.Entries = allowedEmailsConfig.Entries);
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
