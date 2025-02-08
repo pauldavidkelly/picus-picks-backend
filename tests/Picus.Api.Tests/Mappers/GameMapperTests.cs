@@ -135,8 +135,8 @@ public class GameMapperTests
     [InlineData("18", 18, false)]
     [InlineData("160", 19, true)]  // Wild Card Round
     [InlineData("125", 20, true)]  // Divisional Round
-    [InlineData("162", 21, true)]  // Conference Championships
-    [InlineData("163", 22, true)]  // Super Bowl
+    [InlineData("150", 21, true)]  // Conference Championships
+    [InlineData("200", 22, true)]  // Super Bowl
     [InlineData("Week 17", 17, false)]  // Regular season
     [InlineData("500", 500, false)]  // Preseason
     public void ToGameEntity_HandlesWeekAndPlayoffStatus_Correctly(string intRound, int expectedWeek, bool expectedIsPlayoffs)

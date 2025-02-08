@@ -314,7 +314,7 @@ public class GameServiceTests : TestBase
                 AwayScore = "17",
                 HomeTeamId = "team2",
                 AwayTeamId = "team1",
-                IntRound = "161"  // Divisional Round
+                IntRound = "125"  // Divisional Round
             }
         };
 
