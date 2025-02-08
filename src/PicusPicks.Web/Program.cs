@@ -7,16 +7,43 @@ using PicusPicks.Web.Components;
 using PicusPicks.Web.Configuration;
 using PicusPicks.Web.Services;
 using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add configuration loading
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+// Add configuration loading - environment variables last to override file settings
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
+
+// Debug log all configuration values
+var logger = LoggerFactory.Create(config =>
+{
+    config.AddConsole();
+}).CreateLogger("Program");
+
+logger.LogInformation("Configuration values:");
+foreach (var config in builder.Configuration.AsEnumerable().OrderBy(x => x.Key))
+{
+    logger.LogInformation("{Key}: {Value}", config.Key, config.Value);
+}
+
+// Get API base URL with environment variables taking precedence
+var apiBaseUrl = builder.Configuration["API_BASE_URL"]  // Try environment variable first
+    ?? builder.Configuration["APIBASEURL"]
+    ?? builder.Configuration["ApiBaseUrl"]
+    ?? "http://api:8080";
+
+logger.LogInformation("Selected API Base URL: {BaseUrl}", apiBaseUrl);
 
 // Configure Auth0 settings
 var auth0Settings = builder.Configuration.GetSection(Auth0Settings.SectionName).Get<Auth0Settings>();
 builder.Services.Configure<Auth0Settings>(builder.Configuration.GetSection(Auth0Settings.SectionName));
+
+// Add MudBlazor services
+builder.Services.AddMudServices();
 
 // Add authentication
 builder.Services.AddAuthentication(options =>
@@ -80,8 +107,8 @@ var jsonOptions = new System.Text.Json.JsonSerializerOptions
 
 builder.Services.AddHttpClient<IGamesService, GamesService>(client =>
 {
-    var baseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5172/";
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(apiBaseUrl);
+    logger.LogInformation("Configuring GamesService with base URL: {BaseUrl}", apiBaseUrl);
 }).ConfigureHttpClient(client =>
 {
     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
@@ -92,8 +119,8 @@ builder.Services.AddHttpClient<IGamesService, GamesService>(client =>
 
 builder.Services.AddHttpClient<IPicksService, PicksService>(client =>
 {
-    var baseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5172/";
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(apiBaseUrl);
+    logger.LogInformation("Configuring PicksService with base URL: {BaseUrl}", apiBaseUrl);
 }).ConfigureHttpClient(client =>
 {
     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
@@ -104,10 +131,8 @@ builder.Services.AddHttpClient<IPicksService, PicksService>(client =>
 
 builder.Services.AddHttpClient<ILeagueTableService, LeagueTableService>((serviceProvider, client) =>
 {
-    var baseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5172/";
-    client.BaseAddress = new Uri(baseUrl);
-    serviceProvider.GetRequiredService<ILogger<Program>>()
-        .LogInformation("Configuring LeagueTableService with base URL: {BaseUrl}", baseUrl);
+    client.BaseAddress = new Uri(apiBaseUrl);
+    logger.LogInformation("Configuring LeagueTableService with base URL: {BaseUrl}", apiBaseUrl);
 }).ConfigureHttpClient(client =>
 {
     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
