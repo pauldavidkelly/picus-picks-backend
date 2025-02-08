@@ -59,9 +59,9 @@ public static class GameMapper
 
         // Handle playoff weeks
         if (round == "160") return 19;  // Wild Card Round
-        if (round == "161" || round == "125") return 20;  // Divisional Round
-        if (round == "162") return 21;  // Conference Championships
-        if (round == "163") return 22;  // Super Bowl
+        if (round == "125") return 20;  // Divisional Round
+        if (round == "150") return 21;  // Conference Championships
+        if (round == "200") return 22;  // Super Bowl
 
         // Remove any non-digit characters and parse
         var weekStr = new string(round.Where(char.IsDigit).ToArray());
