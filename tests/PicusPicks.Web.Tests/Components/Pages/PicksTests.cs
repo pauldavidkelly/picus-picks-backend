@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Moq;
 using PicusPicks.Web.Components.Pages;
-using Picus.Api.Models.DTOs;
+using PicusPicks.Web.Models.DTOs;
 using PicusPicks.Web.Services;
 using PicusPicks.Web.Tests.Helpers;
 using System.Collections.Generic;

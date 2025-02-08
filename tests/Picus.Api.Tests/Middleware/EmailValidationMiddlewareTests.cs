@@ -99,18 +99,14 @@ public class EmailValidationMiddlewareTests
     [Theory]
     [InlineData(ClaimTypes.Email)]
     [InlineData("email")]
-    [InlineData("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")]
     public async Task InvokeAsync_AuthorizedEmail_WithClaimType_PassesThrough(string claimType)
     {
         // Arrange
         var context = _contextBuilder
             .WithAuthentication()
             .WithEmail(ValidEmail, claimType)
+            .WithClaim(ClaimTypes.NameIdentifier, "auth0|123")
             .Build();
-
-        _mockEmailValidationService
-            .Setup(x => x.IsEmailAllowed(ValidEmail))
-            .Returns(true);
 
         var nextCalled = false;
         RequestDelegate next = (HttpContext ctx) =>
@@ -118,6 +114,14 @@ public class EmailValidationMiddlewareTests
             nextCalled = true;
             return Task.CompletedTask;
         };
+
+        _mockEmailValidationService
+            .Setup(x => x.IsEmailAllowed(ValidEmail))
+            .Returns(true);
+
+        _mockUserService
+            .Setup(x => x.GetOrCreateUserAsync("auth0|123", ValidEmail))
+            .ReturnsAsync(new Models.User { Email = ValidEmail });
 
         var middleware = CreateMiddleware(next);
 
@@ -127,22 +131,6 @@ public class EmailValidationMiddlewareTests
         // Assert
         Assert.True(nextCalled, "Next delegate should be called for authorized emails");
         Assert.Equal(200, context.Response.StatusCode);
-    }
-
-    [Fact]
-    public async Task InvokeAsync_NoEmail_ReturnsBadRequest()
-    {
-        // Arrange
-    /*    var middleware = new EmailValidationMiddleware();
-        var context = _contextBuilder.Build();
-        context.Request.Headers["X-Email"] = string.Empty;
-
-        // Act
-        await middleware.InvokeAsync(context, _mockEmailValidationService.Object, _mockUserService.Object);
-
-        // Assert
-        Assert.Equal(StatusCodes.Status400BadRequest, context.Response.StatusCode);
-        */
     }
 
     private static async Task AssertResponseContainsMessage(HttpContext context, string expectedMessage)

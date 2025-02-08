@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Picus.Api.Models.DTOs;
+using PicusPicks.Web.Models.DTOs;
 
 namespace PicusPicks.Web.Tests.Helpers;
 

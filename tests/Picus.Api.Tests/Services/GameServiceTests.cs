@@ -5,6 +5,10 @@ using Picus.Api.Data;
 using Picus.Api.Models;
 using Picus.Api.Models.SportsDb;
 using Picus.Api.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Picus.Api.Tests.Services;
@@ -285,12 +289,13 @@ public class GameServiceTests : TestBase
         // Arrange
         var leagueId = 1;
         var season = 2023;
+
         var sportsDbGames = new List<Models.SportsDb.Game>
         {
             new()
             {
                 Id = "playoff1",
-                Date = "2024-01-13",  // Wild Card weekend
+                Date = "2024-01-13",  // Wild Card round
                 Time = "20:00:00",
                 StrVenue = "Stadium 1",
                 HomeScore = "28",

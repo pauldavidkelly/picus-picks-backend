@@ -1,4 +1,4 @@
-@using Picus.Api.Models.DTOs
+@namespace PicusPicks.Web.Components
 @using PicusPicks.Web.Helpers
 @inject IPicksService PicksService
 @inject IGamesService GamesService
@@ -279,21 +279,27 @@
         try
         {
             _isLoading = true;
-            var gamesTask = GamesService.GetGamesByWeekAndSeasonAsync(Week, Season);
-            var picksTask = PicksService.GetAllPicksForWeekAsync(Week, Season);
+            _games = await GamesService.GetGamesByWeekAndSeasonAsync(Week, Season);
 
-            await Task.WhenAll(gamesTask, picksTask);
-
-            _games = await gamesTask;
-            _allPicks = await picksTask;
+            try
+            {
+                _allPicks = await PicksService.GetAllPicksForWeekAsync(Week, Season);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error loading picks data");
+                _allPicks = null;
+            }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error loading grid data");
+            Logger.LogError(ex, "Error loading games data");
+            _games = null;
         }
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
     }
 

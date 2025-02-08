@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
-using Picus.Api.Models.DTOs;
+using PicusPicks.Web.Models.DTOs;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

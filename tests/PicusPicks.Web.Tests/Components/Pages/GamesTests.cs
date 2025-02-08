@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Moq;
 using PicusPicks.Web.Components.Pages;
-using Picus.Api.Models.DTOs;
+using PicusPicks.Web.Models.DTOs;
 using PicusPicks.Web.Services;
 using PicusPicks.Web.Tests.Helpers;
 
@@ -14,19 +14,19 @@ namespace PicusPicks.Web.Tests.Components.Pages;
 
 public class GamesTests : TestContext
 {
-    private readonly Mock<IGamesService> _mockGamesService;
-    private readonly Mock<ILogger<Games>> _mockLogger;
-    private readonly Mock<IJSRuntime> _mockJsRuntime;
+    private readonly Mock<IGamesService> _gamesServiceMock;
+    private readonly Mock<ILogger<Games>> _loggerMock;
+    private readonly Mock<IJSRuntime> _jsRuntimeMock;
 
     public GamesTests()
     {
-        _mockGamesService = new Mock<IGamesService>();
-        _mockLogger = new Mock<ILogger<Games>>();
-        _mockJsRuntime = new Mock<IJSRuntime>();
+        _gamesServiceMock = new Mock<IGamesService>();
+        _loggerMock = new Mock<ILogger<Games>>();
+        _jsRuntimeMock = new Mock<IJSRuntime>();
 
-        Services.AddScoped<IGamesService>(_ => _mockGamesService.Object);
-        Services.AddScoped<ILogger<Games>>(_ => _mockLogger.Object);
-        Services.AddScoped<IJSRuntime>(_ => _mockJsRuntime.Object);
+        Services.AddScoped<IGamesService>(_ => _gamesServiceMock.Object);
+        Services.AddScoped<ILogger<Games>>(_ => _loggerMock.Object);
+        Services.AddScoped<IJSRuntime>(_ => _jsRuntimeMock.Object);
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class GamesTests : TestContext
     {
         // Arrange
         var loadingTask = new TaskCompletionSource<IEnumerable<GameDTO>>();
-        _mockGamesService
+        _gamesServiceMock
             .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
             .Returns(loadingTask.Task);
 
@@ -51,7 +51,7 @@ public class GamesTests : TestContext
     {
         // Arrange
         var sampleGames = TestData.GetTestGames();
-        _mockGamesService
+        _gamesServiceMock
             .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(sampleGames);
 
@@ -72,7 +72,7 @@ public class GamesTests : TestContext
     public void LoadGames_ShowsError_WhenLoadFails()
     {
         // Arrange
-        _mockGamesService
+        _gamesServiceMock
             .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ThrowsAsync(new Exception("Test error"));
 
@@ -90,7 +90,7 @@ public class GamesTests : TestContext
     {
         // Arrange
         var sampleGames = TestData.GetTestGames();
-        _mockGamesService
+        _gamesServiceMock
             .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(sampleGames);
 
@@ -101,7 +101,7 @@ public class GamesTests : TestContext
         select.Change("21");
 
         // Assert
-        _mockGamesService.Verify(
+        _gamesServiceMock.Verify(
             x => x.GetGamesByWeekAndSeasonAsync(21, 2024),
             Times.Once);
     }
@@ -111,7 +111,7 @@ public class GamesTests : TestContext
     {
         // Arrange
         var syncTask = new TaskCompletionSource<IEnumerable<GameDTO>>();
-        _mockGamesService
+        _gamesServiceMock
             .Setup(x => x.SyncGamesAsync(It.IsAny<int>(), It.IsAny<int>()))
             .Returns(syncTask.Task);
 
@@ -131,7 +131,7 @@ public class GamesTests : TestContext
     {
         // Arrange
         var sampleGames = TestData.GetTestGames();
-        _mockGamesService
+        _gamesServiceMock
             .Setup(x => x.SyncGamesAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(sampleGames);
 
@@ -161,7 +161,7 @@ public class GamesTests : TestContext
     {
         // Arrange
         var games = TestData.GetTestGames();
-        _mockGamesService
+        _gamesServiceMock
             .Setup(x => x.GetGamesByWeekAndSeasonAsync(expectedWeek, 2024))
             .ReturnsAsync(games);
 
@@ -179,7 +179,7 @@ public class GamesTests : TestContext
     {
         // Arrange
         var games = TestData.GetTestGames();
-        _mockGamesService
+        _gamesServiceMock
             .Setup(x => x.GetGamesByWeekAndSeasonAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(games);
 
@@ -192,7 +192,7 @@ public class GamesTests : TestContext
         weekSelect.Change("20");
 
         // Assert
-        _mockGamesService.Verify(
+        _gamesServiceMock.Verify(
             x => x.GetGamesByWeekAndSeasonAsync(20, 2024),
             Times.Once);
     }

@@ -1,4 +1,4 @@
-using Picus.Api.Models.DTOs;
+using PicusPicks.Web.Models.DTOs;
 
 namespace PicusPicks.Web.Services;
 
