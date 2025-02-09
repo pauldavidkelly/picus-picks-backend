@@ -8,6 +8,7 @@ using PicusPicks.Web.Configuration;
 using PicusPicks.Web.Services;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -141,7 +142,20 @@ builder.Services.AddHttpClient<ILeagueTableService, LeagueTableService>((service
     ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 });
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | 
+                              ForwardedHeaders.XForwardedProto | 
+                              ForwardedHeaders.XForwardedHost;
+    // Clear known networks and proxies since we're behind Render's proxy
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+// Add this as early as possible in the middleware pipeline
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
