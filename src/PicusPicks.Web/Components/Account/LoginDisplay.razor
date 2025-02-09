@@ -8,10 +8,7 @@
         <MudStack Row="true" Spacing="2">
             <MudText>Hello, @(context.User.FindFirst(ClaimTypes.Name)?.Value ?? context.User.FindFirst(ClaimTypes.Email)?.Value ?? "User")!</MudText>
             <form method="post" action="Account/LogOut">
-                @if (context.User.Identity?.IsAuthenticated == true)
-                {
-                    <MudButton Variant="Variant.Text" Color="Color.Inherit" Type="submit">Log out</MudButton>
-                }
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Inherit">Log out</MudButton>
             </form>
         </MudStack>
     </Authorized>
