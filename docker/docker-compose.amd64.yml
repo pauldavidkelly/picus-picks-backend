@@ -35,5 +35,9 @@ services:
       - AUTH0__CALLBACKPATH=/callback
       - ASPNETCORE_URLS=http://+:80
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - ASPNETCORE_FORWARDEDPROTO_ENABLED=true
+      - ASPNETCORE_FORWARDEDPROTO_HEADER=X-Forwarded-Proto
+      - ASPNETCORE_FORWARDEDHOST_ENABLED=true
+      - ASPNETCORE_FORWARDEDHOST_HEADER=X-Forwarded-Host
     depends_on:
       - api
